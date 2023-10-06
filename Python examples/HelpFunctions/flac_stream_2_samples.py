@@ -1,6 +1,6 @@
 import miniaudio
 import numpy as np
-import tempfile
+from io import BytesIO  
 
 class BitBuffer:
 	def __init__(self, buf):
@@ -50,14 +50,15 @@ def add_header(buf, BLOCK_SIZE,  NUMCHANNEL=1, BITDEPTH=24, SAMPLEDATALENGTH=409
 	for t in stream_data:
 	    buf.write_int(8, t)
 	    
-def decode(flac_stream):
+def decode(flac_stream, calibrationFactor):
     # Add the header in front of the encoded samples 
-    with tempfile.TemporaryFile() as fp:
-        with BitBuffer(fp) as buf:
-            add_header(buf, BLOCK_SIZE=flac_stream.frame_length, stream_data = flac_stream.frame)
+    fp = BytesIO()
+    with BitBuffer(fp) as buf:
+        add_header(buf, BLOCK_SIZE=flac_stream.frame_length, stream_data = flac_stream.frame)
         fp.seek(0)
 		# Decode samples  
         tmp = miniaudio.flac_read_s32(fp.read())
-    # now the samples is scaled to Pa 
-    samples = (np.array(tmp.samples) / 2**23)
+	# now the samples is scaled to Pa 
+    tmp = (np.array(tmp.samples) >> 8) # 32 bit -> 24 bit 
+    samples = tmp * calibrationFactor
     return samples 
