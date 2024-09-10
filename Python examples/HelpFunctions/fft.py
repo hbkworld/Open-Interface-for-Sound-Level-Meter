@@ -30,6 +30,9 @@ def dBfft(x, fs, win=None, ref=32768):
     # because we are using half of FFT spectrum.
     s_mag = (np.abs(sp) * np.sqrt(2)) / np.sum(win)
 
+    for i in range(len(s_mag)):
+        if s_mag[i] == 0:
+            s_mag[i] = 1e-10
     # Convert to dBFS
     s_dbfs = 20 * np.log10(s_mag/ref)
     return freq, s_dbfs
