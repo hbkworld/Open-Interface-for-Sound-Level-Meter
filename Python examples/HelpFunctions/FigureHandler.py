@@ -34,7 +34,7 @@ class FigureHandler(ABC):
         labelStyle = {'color': '#000', 'font-size': '13pt'}
         self.plotTime.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 11))
         self.plotTime.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 11))
-        self.plotTime.getAxis('left').setLabel('Pressure', units='Pa', **labelStyle)
+        self.plotTime.getAxis('left').setLabel('Approximately pressure', units='Pa', **labelStyle)
         self.plotTime.getAxis('bottom').setLabel('Time', units='s', **labelStyle)
 
         # Subplot 2 (FFT)
@@ -51,7 +51,7 @@ class FigureHandler(ABC):
         self.plotFreq.showGrid(x=True, y=True)
         self.plotFreq.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
         self.plotFreq.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
-        self.plotFreq.getAxis('left').setLabel('db SPL re 20 µPa', **labelStyle)
+        self.plotFreq.getAxis('left').setLabel('Approximately db SPL re 20 µPa', **labelStyle)
         self.plotFreq.getAxis('bottom').setLabel('Frequency', units='Hz', **labelStyle)
         self.win.show()
 

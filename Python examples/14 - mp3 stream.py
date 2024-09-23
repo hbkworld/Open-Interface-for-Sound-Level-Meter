@@ -18,7 +18,7 @@ import HelpFunctions.sequence_handler as seq
 import HelpFunctions.websocket_handler as webSocket
 from timeit import default_timer as timer
 
-# Buffer and decoder for the flac stream
+# Buffer and decoder for the mp3 stream
 from HelpFunctions.buffer import DataBuffer
 from HelpFunctions.fft import dBfft
 import threading
@@ -31,6 +31,7 @@ host = "http://" + ip
 sequenceID = 156
 
 
+# a dual bufferfile stores the data which is used for decoding the mp3 stream.
 class TmpfileStateMachine:
     # tmpfiles are used to store the mp3 data which are used for decoding.
     class State(enum.Enum):
