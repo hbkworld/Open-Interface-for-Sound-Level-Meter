@@ -5,3 +5,6 @@ websockets
 matplotlib
 drawnow
 miniaudio
+python-dotenv
+pyqtgraph
+PyQt5
