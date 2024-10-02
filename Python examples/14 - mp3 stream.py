@@ -4,6 +4,7 @@ import miniaudio
 import requests
 import sys
 import numpy as np
+import pyqtgraph as pg
 
 # Modules to convert webxi data
 import webxi.webxi_stream as webxiStream
@@ -102,6 +103,17 @@ class streamHandler:
 
 
 class figureHandler(FigureHandler):
+
+    def axisConfig(self):
+        self.plotTime.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 11))
+        self.plotTime.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 11))
+        self.plotTime.getAxis('left').setLabel('Approximately pressure', units='Pa', **self.labelStyle)
+        self.plotTime.getAxis('bottom').setLabel('Time', units='s', **self.labelStyle)
+        self.plotFreq.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
+        self.plotFreq.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
+        self.plotFreq.getAxis('left').setLabel('Approximately dB SPL re 20 µPa', **self.labelStyle)
+        self.plotFreq.getAxis('bottom').setLabel('Frequency', units='Hz', **self.labelStyle)
+
     def update(self):
         signal = DataBuffer.getPart(self.chunkToShow)
         x = np.linspace(np.min(self.axis), np.max(self.axis), len(signal))

@@ -31,11 +31,7 @@ class FigureHandler(ABC):
         self.plotTime.showGrid(x=True, y=True)
         self.plotTime.setXRange(np.min(self.axis), np.max(self.axis))
         self.plotTime.setYRange(-2, 2)
-        labelStyle = {'color': '#000', 'font-size': '13pt'}
-        self.plotTime.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 11))
-        self.plotTime.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 11))
-        self.plotTime.getAxis('left').setLabel('Approximately pressure', units='Pa', **labelStyle)
-        self.plotTime.getAxis('bottom').setLabel('Time', units='s', **labelStyle)
+        self.labelStyle = {'color': '#000', 'font-size': '13pt'}
 
         # Subplot 2 (FFT)
         # Calculate the frequency vector
@@ -49,10 +45,7 @@ class FigureHandler(ABC):
         self.plotFreq.getAxis('bottom').enableAutoSIPrefix(enable=False)
         self.plotFreq.setLogMode(x=True, y=False)
         self.plotFreq.showGrid(x=True, y=True)
-        self.plotFreq.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
-        self.plotFreq.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
-        self.plotFreq.getAxis('left').setLabel('Approximately dB SPL re 20 µPa', **labelStyle)
-        self.plotFreq.getAxis('bottom').setLabel('Frequency', units='Hz', **labelStyle)
+        self.axisConfig()
         self.win.show()
 
         self.timer = pg.QtCore.QTimer()
@@ -61,6 +54,10 @@ class FigureHandler(ABC):
 
     def run(self):
         QtWidgets.QApplication.instance().exec_()
+
+    @abstractmethod
+    def axisConfig(self):
+        pass
 
     @abstractmethod
     def update(self):
