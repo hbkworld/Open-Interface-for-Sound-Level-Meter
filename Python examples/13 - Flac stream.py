@@ -56,12 +56,12 @@ class streamHandler:
             fut.set_result(True)
 
     def get_calibration_factor(self):
-        # Calculate calibration factor from the microphone sensitivity 
-        response= requests.get(f"{host}/WebXi/Applications/SLM/Setup/TransducerSensitivity")
-        assert(response.status_code == 200)
-        mic_sens =  float(response.text)*1e-3 # mV/Pa
-        max_lvl = 20 * np.log10( (self.max_input / mic_sens) / 20e-6) # dB SPL re 20 uPa
-        self.calibrationFactor = (20e-6 * 10**(max_lvl / 20)) / (2**23-1) * np.sqrt(2) 
+        # Calculate calibration factor from the microphone sensitivity
+        response = requests.get(f"{host}/WebXi/Applications/SLM/Outputs/Sensitivity")
+        assert (response.status_code == 200)
+        mic_sens = float(response.text) # V/Pa
+        max_lvl = 20 * np.log10((self.max_input / mic_sens) / 20e-6)  # dB SPL re 20 uPa
+        self.calibrationFactor = (20e-6 * 10 ** (max_lvl / 20)) / (2 ** 23 - 1) * np.sqrt(2)
 
     def streamInit(self):
         # Enable audio recording analysis quality
