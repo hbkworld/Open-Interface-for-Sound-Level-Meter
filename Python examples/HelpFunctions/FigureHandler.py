@@ -51,7 +51,7 @@ class FigureHandler(ABC):
         self.plotFreq.showGrid(x=True, y=True)
         self.plotFreq.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
         self.plotFreq.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
-        self.plotFreq.getAxis('left').setLabel('Approximately db SPL re 20 µPa', **labelStyle)
+        self.plotFreq.getAxis('left').setLabel('Approximately dB SPL re 20 µPa', **labelStyle)
         self.plotFreq.getAxis('bottom').setLabel('Frequency', units='Hz', **labelStyle)
         self.win.show()
 

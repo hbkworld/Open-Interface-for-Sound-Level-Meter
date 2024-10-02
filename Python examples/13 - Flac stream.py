@@ -26,6 +26,8 @@ from HelpFunctions.fft import dBfft
 import HelpFunctions.flac_stream_2_samples as flac2samples
 import threading
 
+from HelpFunctions.FigureHandler import FigureHandler
+
 # FLAC streaming is only available on 2255
 ip = "BK2255-000404"
 host = "http://" + ip
@@ -97,67 +99,31 @@ class streamHandler:
     def stopStream(self):
         self.StreamRun = False
 
-class FigHandler:
-    def __init__(self):
-        self.ChunkToShow = 2**16
-        self.fftSize = self.ChunkToShow
 
-        # Used to store "old" spectrums for fft averaging 
-        self.old  = 0
-        self.oldold = 0
-
-        ## Figures        
-        self.fig, (self.ax1, self.ax2) = plt.subplots(2,1)
-        axis = np.arange(self.ChunkToShow)
-        axis = np.flip(axis * -1/2**16)
-
-        # Subplot1 Time data
-        self.line1, = self.ax1.plot(axis, np.arange(self.ChunkToShow))
-        self.ax1.set_xlim(left=np.min(axis), right=np.max(axis))
-        self.ax1.set_ylim(bottom=-2, top=2)
-        self.ax1.grid()
-        self.ax1.set_xlabel("Time in seconds")
-        self.ax1.set_ylabel("Pressure in Pa")
-
-        # Subplot 2 (FFT) 
-        # Calculate the frequency vector 
-        freq = np.arange((self.fftSize / 2) + 1) / (float(self.fftSize) / 2**16)
-        self.line2, = self.ax2.semilogx(freq, np.arange(len(freq)))
-        self.ax2.set_xlim(right=np.max(freq))
-        self.ax2.set_ylim(bottom=-20, top=130)
-        self.ax2.grid()
-        self.ax2.set_xlabel("Frequency in Hz")
-        self.ax2.set_ylabel("dB SPL re 20 µPa")
-        # Window for the fft
-        self.win = np.hamming(self.fftSize)
-        self.fig.canvas.mpl_connect('close_event', on_close)
-        self.fig.tight_layout()
-
-    def _update(self, i):
-        signal = DataBuffer.getPart(self.ChunkToShow)
-        self.line1.set_ydata(signal)
-        # Update the frequency domain subplot2
-        freq, s_dbfs = dBfft(signal, 2**16, self.win, ref = 20e-6) #Reference = 20µPa
+class figureHandler(FigureHandler):
+    def update(self):
+        signal = DataBuffer.getPart(self.chunkToShow)
+        x = np.linspace(np.min(self.axis), np.max(self.axis), len(signal))
+        freq, s_dbfs = dBfft(signal, 2**16, self.fftHamming, ref=20e-6)  #Reference = 20µPa
         # Average the fft for a smoother plot
-        avg = s_dbfs/3 + self.old/3 + self.oldold/3 
-        self.line2.set_ydata(avg)
+        avg = s_dbfs / 3 + self.old / 3 + self.oldold / 3
+        self.curveTime.setData(x, signal)
+        self.curveFreq.setData(freq, avg)
         self.oldold = self.old
         self.old = s_dbfs
-        if (i % 5 == 0):
+        if (self.i % 5 == 0):
             # Autoscale and print min/max values every 0.5 seconds
-            min_Pa = np.round(min(signal),2)
-            max_Pa = np.round(max(signal),2)    
-            fft_peak = np.round(max(avg),2)
-            fft_min = np.round(min(avg),2)
+            min_Pa = np.round(min(signal), 2)
+            max_Pa = np.round(max(signal), 2)
+            fft_peak = np.round(max(avg), 2)
+            fft_min = np.round(min(avg), 2)
             peak_freq = (freq[np.argmax(avg)])
             if (min_Pa != max_Pa):
-                self.ax1.set_ylim(bottom = min_Pa * 1.2, top=max_Pa * 1.2)
-            if(np.isinf(fft_peak) == False):
-                self.ax2.set_ylim(bottom = fft_min, top=fft_peak * 1.2)
-            print(f"Min amplitude: {min_Pa:.2f} Pa, Max amplitude: {max_Pa:.2f} Pa, FFT peak amplitude: {fft_peak:.2f} dB SPL, FFT peak frequency: {peak_freq:.2f} Hz")
-
-    def startAnimation(self):
-        self.ani = FuncAnimation(self.fig, self._update, interval=100)
+                self.plotTime.setYRange(min_Pa * 1.2, max_Pa * 1.2)
+            if (np.isinf(fft_peak) == False):
+                self.plotFreq.setYRange(fft_min, fft_peak * 1.2)
+            print(f"Min: {min_Pa} Pa, Max: {max_Pa} Pa, Peak: {fft_peak} dB SPL, Peak freq: {peak_freq} Hz")
+        self.i += 1
 
 def on_close(event):
     streamer.stopStream()
@@ -165,8 +131,8 @@ def on_close(event):
 
 if __name__ == "__main__":
     streamer = streamHandler()
-    fig = FigHandler()
+    fig = figureHandler()
     threading.Thread(target=streamer.startStream).start()
-    threading.Thread(target=fig.startAnimation()).start()
+    threading.Thread(target=fig.run()).start()
     plt.show()
  
