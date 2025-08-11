@@ -5,6 +5,7 @@ This README will guide you through the setup process as well as how to run the d
 1. python >= 3.6
 2. See top folder README for more
 3. Add git to the environment variables
+4. A C++ compiler for building miniaudio (MP#/FLAC streams)
 
 It is recommended to install VSCode, Sublime Text 3, or similar to run and edit the code. To not break any Python installation it is recommended to use either a docker or a Python virtual environment to run the test, see references.
 
