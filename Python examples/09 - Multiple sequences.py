@@ -18,11 +18,15 @@ import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
+from dotenv import load_dotenv
+import os
 
-ip = "192.168.0.111"
+load_dotenv()
+ip = os.getenv("IP")
 host = "http://" + ip
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
+# Incase of error make sure the sequences are enabled on the SLM.
 sequenceNames = ["LAeq", "LCeq"]
 
 def getSequenceID(host, SqeuenceName):
@@ -61,4 +65,9 @@ async def main():
     await webSocket.next_async_websocket(uri, msg_func)
 
 if __name__ == "__main__":
+    # Makes it so BBLCeq and BBLAeq is true incase they're set to false on the SLM
+    requests.put(host + "/webxi/Applications/SLM/Setup/BBLCeq", json=True)
+    requests.put(host + "/webxi/Applications/SLM/Setup/BBLAeq", json=True)
+
+
     asyncio.run(main())

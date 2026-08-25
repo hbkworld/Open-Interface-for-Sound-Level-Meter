@@ -18,12 +18,16 @@ import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
+from dotenv import load_dotenv
+import os
 
-ip = "192.168.0.40"
+load_dotenv()
+ip = os.getenv("IP")
 host = "http://" + ip
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
-sequenceNames = ["LAeq", "LApeak"]
+# Incase of error make sure the sequences are enabled on the SLM.
+sequenceNames = ["LAeq", "LCeq"]
 
 def getSequenceID(host, SqeuenceName):
     sequences = requests.get(host + "/webxi/sequences?recursive").json()
@@ -32,6 +36,10 @@ def getSequenceID(host, SqeuenceName):
 class streamHandler:
 
     def __init__(self, startStream = False):
+        # Makes it so BBLCeq and BBLAeq is true incase they're set to false on the SLM
+        requests.put(host + "/webxi/Applications/SLM/Setup/BBLCeq", json=True)
+        requests.put(host + "/webxi/Applications/SLM/Setup/BBLAeq", json=True)
+
         self.streamInit()
         if startStream:
             self.startStream()
@@ -110,7 +118,7 @@ class FigHandler:
         self.fig.autofmt_xdate()
         self.fig.tight_layout()
         self.fig.canvas.mpl_connect('close_event', on_close)
-        self.fig.canvas.set_window_title('LAeq example') 
+        self.fig.canvas.setWindowTitle('LAeq example') 
 
     def _update(self, i): 
         for idx, x in enumerate(self.dataHandler):

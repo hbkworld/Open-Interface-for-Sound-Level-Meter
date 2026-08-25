@@ -15,8 +15,11 @@ import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LA
 import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
+from dotenv import load_dotenv
+import os
 
-ip = "192.168.0.40"
+load_dotenv()
+ip = os.getenv("IP")
 host = "http://" + ip
 sequenceID = 35
 
@@ -106,7 +109,10 @@ def on_close(event):
     sys.exit(0)    
 
 if __name__ == "__main__":
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightA", json=True)
+    requests.put(host + "/webxi/Applications/SLM/Setup/CPBLAeq", json=True)
     ID, sequence = seq.get_sequence(host, getSequenceID(host, "CPBLAeq"))
+
     CPB_LAeq = CPB_SLM(sequence)
     stream_handler = streamHandler(CPB_LAeq, "CPB test", ID)
     stream_handler.streamInit()
