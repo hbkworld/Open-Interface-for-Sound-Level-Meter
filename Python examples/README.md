@@ -19,7 +19,12 @@ where python is your python environment, change this if e.g. a virtual environme
 ```Powershell
 python "01 - Getting device information.py"
 ```
-Remember to change the IP/host in each example
+Create a .env file in the same folder as this script and add a line with the 
+```
+IP = "the ip of your SLM".
+```
+
+Or you can manually change the ip to match your SLM in each example.
 ## Structure
 This example packages consist of multiple examples where the level of complexity increases through the examples resulting in real-time streaming of LAeq. Some of the later examples will have different functions in common. Those are placed in the HelpFunctions folder.
 To ease the handling of the data streamed from the device are Kaitai structs used. See references. The needed files to run the examples are already compiled and a part of this example package.
