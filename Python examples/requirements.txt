@@ -8,4 +8,4 @@ miniaudio
 python-dotenv
 pyqtgraph
 PyQt5
-setuptools
+packaging
