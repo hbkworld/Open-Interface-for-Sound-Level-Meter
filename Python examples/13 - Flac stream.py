@@ -25,9 +25,12 @@ import HelpFunctions.flac_stream_2_samples as flac2samples
 import threading
 
 from HelpFunctions.FigureHandler import FigureHandler
+from dotenv import load_dotenv
+import os
 
 # FLAC streaming is only available on 2255
-ip = "BK2255-000404"
+load_dotenv()
+ip = os.getenv("IP")
 host = "http://" + ip
 sequenceID = 157
 

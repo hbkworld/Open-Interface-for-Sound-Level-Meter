@@ -11,10 +11,12 @@ import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measu
 import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-
+from dotenv import load_dotenv
+import os
 
 # Setup device 
-ip = "169.254.3.40"
+load_dotenv()
+ip = os.getenv("IP")
 host = "http://" + ip
 socket.gethostbyname(socket.gethostname())
 

@@ -25,8 +25,11 @@ import threading
 
 from HelpFunctions.FigureHandler import FigureHandler
 from HelpFunctions.tmpFileStateMachine import TmpfileStateMachine
+from dotenv import load_dotenv
+import os
 
-ip = "BK2245-000605"
+load_dotenv()
+ip = os.getenv("IP")
 host = "http://" + ip
 sequenceID = 156
 

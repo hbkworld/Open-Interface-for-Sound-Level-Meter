@@ -6,7 +6,12 @@
 import requests # Handle reply from server
 import pprint as pp # Pretty Print to nicely print out data from the response
 import time # For the 'sleep' funtion
-host = "http://10.100.38.87"
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+ip = os.getenv("IP")
+host = "http://" + ip
 
 """
 Run program loop 'forever' to fetch LAF from the SLM (or until aborted, eg by ctrl/c)

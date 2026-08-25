@@ -4,7 +4,12 @@
 """
 
 import requests
-host = "http://10.100.38.87"
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+ip = os.getenv("IP")
+host = "http://" + ip
 
 """
 DisplayScheme is a node that determines wether the display is dark or light.

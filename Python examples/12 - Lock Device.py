@@ -4,8 +4,11 @@ This is helpful when wanting to avoid changes
 """
 
 import requests
+from dotenv import load_dotenv
+import os
 
-ip = "169.254.3.40"
+load_dotenv()
+ip = os.getenv("IP")
 host = "http://" + ip
 
 print("""Enable the service mode on the device and set a password to avoid others from opening the lock

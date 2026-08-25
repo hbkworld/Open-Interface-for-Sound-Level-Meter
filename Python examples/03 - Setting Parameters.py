@@ -4,7 +4,12 @@
 """
 
 import requests
-host = "http://10.100.38.87"
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+ip = os.getenv("IP")
+host = "http://" + ip
 
 """
 To set the value of a node, use the HTTP PUT request with a JSON value.
