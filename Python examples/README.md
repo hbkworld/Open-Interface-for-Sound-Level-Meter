@@ -6,10 +6,46 @@ This README will guide you through the setup process as well as how to run the d
 2. See top folder README for more
 3. Add git to the environment variables
 4. A C++ compiler for building miniaudio (MP3/FLAC streams)
+5. Create a `.env` file in the same folder as the examples and add:
+
+   ```
+   IP="the ip of your SLM"
+   ```
+
+    Or you can manually change the ip to match your SLM in each example.
+
+    The `.env` file is listed in `.gitignore`, so it is never committed and must be created locally after cloning.
+
 
 It is recommended to install VSCode, Sublime Text 3, or similar to run and edit the code. To not break any Python installation it is recommended to use either a docker or a Python virtual environment to run the test, see references.
 
 ## Setup and how to run an example
+
+### If you're using uv
+
+To use the program using uv run the following command in the terminal
+
+```
+uv sync
+```
+This creates a `.venv` folder and installs everything into it. You do not need to activate it, `uv run` uses it automatically.
+
+Then to run the examples use the command
+
+```
+uv run '.\01 - Getting device information.py'
+```
+
+### If you're using pip
+
+First create and activate a virtual environment, so the packages are not installed into your system Python:
+
+```Powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+On macOS and Linux the second command is `source .venv/bin/activate` instead. Once active, the environment name is shown in the terminal prompt. Use `deactivate` to leave it again.
+
 To run the given examples must different Python modules be installed. To do this run the following two commands in a given terminal
 ```Powershell
 python -m pip install -r requirements.txt
@@ -19,11 +55,7 @@ where python is your python environment, change this if e.g. a virtual environme
 ```Powershell
 python "01 - Getting device information.py"
 ```
-Create a `.env` file in the same folder as the examples and add:
 
-    IP="the ip of your SLM"
-
-Or you can manually change the ip to match your SLM in each example.
 ## Structure
 This example packages consist of multiple examples where the level of complexity increases through the examples resulting in real-time streaming of LAeq. Some of the later examples will have different functions in common. Those are placed in the HelpFunctions folder.
 To ease the handling of the data streamed from the device are Kaitai structs used. See references. The needed files to run the examples are already compiled and a part of this example package.
