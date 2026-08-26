@@ -38,6 +38,9 @@ def getSequenceID(host, SqeuenceName):
 class streamHandler:
 
     def __init__(self, startStream = False):
+        requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightA", json=True)
+        requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightC", json=True)
+        
         # Makes it so BBLCeq and BBLAeq is true incase they're set to false on the SLM
         requests.put(host + "/webxi/Applications/SLM/Setup/BBLCeq", json=True)
         requests.put(host + "/webxi/Applications/SLM/Setup/BBLAeq", json=True)
