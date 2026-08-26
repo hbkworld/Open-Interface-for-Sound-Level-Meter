@@ -19,10 +19,9 @@ where python is your python environment, change this if e.g. a virtual environme
 ```Powershell
 python "01 - Getting device information.py"
 ```
-Create a .env file in the same folder as this script and add a line with the 
-```
-IP = "the ip of your SLM"
-```
+Create a `.env` file in the same folder as the examples and add:
+
+    IP="the ip of your SLM"
 
 Or you can manually change the ip to match your SLM in each example.
 ## Structure
