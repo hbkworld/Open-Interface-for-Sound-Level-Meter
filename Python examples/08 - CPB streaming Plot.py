@@ -99,9 +99,8 @@ class FigureHandler:
         self.fig.canvas.mpl_connect('close_event', on_close)
 
     def _update(self, i): 
-        for bar in self.ax.containers:
-            bar.remove()
-        self.ax.bar(self.freq, self.dataHandler.CPB_values, width=.99, color='#1f77b4')
+        for rect, h in zip(self.ln.patches, self.dataHandler.CPB_values):
+            rect.set_height(h)
 
     def startAnimation(self):
         self.ani = FuncAnimation(self.fig, self._update, interval=1000) 
@@ -111,6 +110,11 @@ def on_close(event):
     sys.exit(0)    
 
 if __name__ == "__main__":
+    # makes sure no other CPBFreqWeight is occupying spot 1
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightB", json=False)
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightC", json=False)
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightZ", json=False)
+    
     requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightA", json=True)
     requests.put(host + "/WebXi/Applications/SLM/Setup/CPBLAeq", json=True)
     ID, sequence = seq.get_sequence(host, getSequenceID(host, "CPBLAeq"))
