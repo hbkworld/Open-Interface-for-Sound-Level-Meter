@@ -67,6 +67,8 @@ async def main():
     await webSocket.next_async_websocket(uri, msg_func)
 
 if __name__ == "__main__":
+    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightB", json=False)
+    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightZ", json=False)
     requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightA", json=True)
     requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightC", json=True)
     
