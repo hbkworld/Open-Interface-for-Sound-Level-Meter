@@ -4,9 +4,14 @@ This is helpful when wanting to avoid changes
 """
 
 import requests
+from dotenv import load_dotenv
+import os
 
-ip = "169.254.3.40"
-host = "http://" + ip
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+ip = os.getenv("IP")
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
 
 print("""Enable the service mode on the device and set a password to avoid others from opening the lock
 These changes can be seen in System settings > Advanced settings

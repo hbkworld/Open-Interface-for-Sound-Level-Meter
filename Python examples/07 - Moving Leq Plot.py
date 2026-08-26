@@ -21,9 +21,14 @@ import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measu
 import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
+from dotenv import load_dotenv
+import os
 
-ip = "192.168.0.40"
-host = "http://" + ip
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+ip = os.getenv("IP")
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
 sequenceID = 6
 
 leq_10_mov = MovingLeq(10, storedata=True)

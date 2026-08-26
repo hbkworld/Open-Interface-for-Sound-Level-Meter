@@ -15,9 +15,14 @@ import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LA
 import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
+from dotenv import load_dotenv
+import os
 
-ip = "192.168.0.40"
-host = "http://" + ip
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+ip = os.getenv("IP")
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
 sequenceID = 35
 
 class CPB_SLM:
@@ -94,9 +99,8 @@ class FigureHandler:
         self.fig.canvas.mpl_connect('close_event', on_close)
 
     def _update(self, i): 
-        for bar in self.ax.containers:
-            bar.remove()
-        self.ax.bar(self.freq, self.dataHandler.CPB_values, width=.99, color='#1f77b4')
+        for rect, h in zip(self.ln.patches, self.dataHandler.CPB_values):
+            rect.set_height(h)
 
     def startAnimation(self):
         self.ani = FuncAnimation(self.fig, self._update, interval=1000) 
@@ -106,7 +110,15 @@ def on_close(event):
     sys.exit(0)    
 
 if __name__ == "__main__":
+    # makes sure no other CPBFreqWeight is occupying spot 1
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightB", json=False)
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightC", json=False)
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightZ", json=False)
+    
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightA", json=True)
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBLAeq", json=True)
     ID, sequence = seq.get_sequence(host, getSequenceID(host, "CPBLAeq"))
+
     CPB_LAeq = CPB_SLM(sequence)
     stream_handler = streamHandler(CPB_LAeq, "CPB test", ID)
     stream_handler.streamInit()
