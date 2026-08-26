@@ -63,7 +63,8 @@ class streamHandler:
             self.sequences.append(sequence)
             self.sequenceFuncs.append(MovingLeq(10, storedata=True, windowSize=100))
 
-        self.uri = stream.setup_stream(host, ip, self.IDs, "MultipleSequences")
+        self.streamName = "MultipleSequences"
+        self.uri = stream.setup_stream(host, ip, self.IDs, self.streamName)
         # Start a measurement. This is needed to obtain data from the device
         meas.start_pause_measurement(host,True) 
 
@@ -72,20 +73,27 @@ class streamHandler:
         asyncio.run(self.runStream())
 
     async def runStream(self):
-        loop = asyncio.get_running_loop()
-        fut = loop.create_future()
+        self.loop = asyncio.get_running_loop()
+        self.fut = self.loop.create_future()
         # Create lambda function to use for the stream message. In this example is a function
         # call used
-        self.msg_func = lambda msg : self.print_data(msg, self.IDs, self.sequences, self.sequenceFuncs, fut) 
+        self.msg_func = lambda msg : self.print_data(msg, self.IDs, self.sequences, self.sequenceFuncs, self.fut) 
         # Initilize and run the websocket to retrive data
-        loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
-        await fut
+        task = self.loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
+        await self.fut
+        task.cancel()
         meas.stop_measurement(host)
-        streamID = stream.get_stream_ID(host, "LAeqStream")
-        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used 
 
     def stopStream(self):
         self.StreamRun = False  
+        if hasattr(self, "loop"):
+            self.loop.call_soon_threadsafe(self._resolve)
+        streamID = stream.get_stream_ID(host, self.streamName)
+        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used 
+
+    def _resolve(self):
+        if not self.fut.done():
+            self.fut.set_result(True)
 
     def print_data(self, message, IDs, sequences, sequenceFuncs, fut):
         package = webxiStream.WebxiStream.from_bytes(message)
@@ -100,7 +108,7 @@ class streamHandler:
                         print(f"{seqName}: {value} and 10s avg: {move:.2f}")
         
         if not self.StreamRun:
-            fut.set_result(True)
+            self._resolve()
 
 class FigHandler:  
    
@@ -138,11 +146,10 @@ class FigHandler:
 
 def on_close(event):
     streamer.stopStream()
-    sys.exit(0)
 
 if __name__ == "__main__":
     streamer = streamHandler()
     fig = FigHandler(streamer.sequenceFuncs)
     fig.startAnimation()
-    threading.Thread(target=streamer.startStream).start()        
+    threading.Thread(target=streamer.startStream, daemon=True).start()        
     plt.show()

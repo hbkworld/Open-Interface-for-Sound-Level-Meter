@@ -53,7 +53,7 @@ class streamHandler:
             print("LAeq: " + "%.1f" % LAeq_value + "  |  LAeq,mov,10s: " + "%.1f" % LAeq_mov_value)
             
         if not self.StreamRun:
-            fut.set_result(True)
+            self._resolve()
 
     def streamInit(self):
         SLM_Setup_LAeq(host)
@@ -62,7 +62,8 @@ class streamHandler:
         self.data_type = self.sequence["DataType"]  
 
         # Get URI for stream
-        self.uri = stream.setup_stream(host,ip,self.ID,"LAeqStream")  
+        self.streamName = "LAeqStream"
+        self.uri = stream.setup_stream(host,ip,self.ID,self.streamName)  
 
         # Start a measurement. This is needed to obtain data from the device
         meas.start_pause_measurement(host,True)               
@@ -72,20 +73,27 @@ class streamHandler:
         asyncio.run(self.runStream())
 
     async def runStream(self):
-        loop = asyncio.get_running_loop()
-        fut = loop.create_future()
+        self.loop = asyncio.get_running_loop()
+        self.fut = self.loop.create_future()
         # Create lambda function to use for the stream message. In this example is a function
         # call used
-        self.msg_func = lambda msg : self.print_LAeq_mov(msg, self.data_type, leq_10_mov, fut) 
+        self.msg_func = lambda msg : self.print_LAeq_mov(msg, self.data_type, leq_10_mov, self.fut) 
         # Initilize and run the websocket to retrive data
-        loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
-        await fut
+        task = self.loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
+        await self.fut
+        task.cancel()
         meas.stop_measurement(host)
-        streamID = stream.get_stream_ID(host, "LAeqStream")
-        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used        
 
     def stopStream(self):
         self.StreamRun = False  
+        if hasattr(self, "loop"):
+            self.loop.call_soon_threadsafe(self._resolve)
+        streamID = stream.get_stream_ID(host, self.streamName)
+        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+
+    def _resolve(self):
+        if not self.fut.done():
+            self.fut.set_result(True)
 
 class FigHandler:  
    
@@ -117,12 +125,11 @@ class FigHandler:
 
 def on_close(event):
     streamer.stopStream()
-    sys.exit(0)
 
 if __name__ == "__main__":
     streamer = streamHandler()
     fig = FigHandler(leq_10_mov)
     fig.startAnimation()
-    threading.Thread(target=streamer.startStream).start()        
+    threading.Thread(target=streamer.startStream, daemon=True).start()        
     plt.show()
     

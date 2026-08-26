@@ -2,7 +2,6 @@ import asyncio
 import requests
 import sys
 import pyqtgraph as pg
-import matplotlib.pyplot as plt
 import numpy as np
 
 # Modules to convert webxi data
@@ -45,7 +44,7 @@ class streamHandler:
         if startStream:
             self.startStream()
     
-    def decode_flac_stream(self, message, fut):
+    def decode_flac_stream(self, message):
         start = timer()
         package = webxiStream.WebxiStream.from_bytes(message)
         if package.header.message_type == webxiStream.WebxiStream.Header.EMessageType.e_sequence_data:
@@ -58,7 +57,7 @@ class streamHandler:
             if 0.0625 < total:
                 print(f"TotalTime: {total}")
         if not self.StreamRun:
-            fut.set_result(True)
+            self._resolve()
 
     def get_calibration_factor(self):
         # Calculate calibration factor from the microphone sensitivity
@@ -75,32 +74,42 @@ class streamHandler:
         self.get_calibration_factor()
         self.ID, self.sequence = seq.get_sequence(host, sequenceID)
         # Get URI for stream
-        self.uri = stream.setup_stream(host, ip, self.ID, "Flac stream")
+        self.streamName = "Flac stream"
+        self.uri = stream.setup_stream(host, ip, self.ID, self.streamName)
 
         # Start a measurement. This is needed to obtain data from the device
         meas.start_pause_measurement(host, True)
 
     def startStream(self):
         self.StreamRun = True
+
         asyncio.run(self.runStream())
 
     async def runStream(self):
-        loop = asyncio.get_running_loop()
-        fut = loop.create_future()
+        self.loop = asyncio.get_running_loop()
+        self.fut = self.loop.create_future()
         # Create lambda function to use for the stream message. In this example is a function
         # call used
-        self.msg_func = lambda msg : self.decode_flac_stream(msg, fut) 
+        self.msg_func = lambda msg : self.decode_flac_stream(msg) 
         # Initilize and run the websocket to retrive data
 
-        loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
-        await fut
+        task = self.loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
+        await self.fut
+        task.cancel()
         meas.stop_measurement(host)
-        streamID = stream.get_stream_ID(host, "flac ")
-        # Cleaning up and deleting the stream used
-        requests.delete(host + "/WebXi/Streams/" + str(streamID))
+
 
     def stopStream(self):
         self.StreamRun = False
+        # Resolve the future directly; waiting for the next message may never happen
+        if hasattr(self, "loop"):
+            self.loop.call_soon_threadsafe(self._resolve)
+        streamID = stream.get_stream_ID(host, self.streamName)
+        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+
+    def _resolve(self):
+        if not self.fut.done():
+            self.fut.set_result(True)
 
 
 class figureHandler(FigureHandler):
@@ -139,14 +148,13 @@ class figureHandler(FigureHandler):
             print(f"Min: {min_Pa} Pa, Max: {max_Pa} Pa, Peak: {fft_peak} dB SPL, Peak freq: {peak_freq} Hz")
         self.i += 1
 
-def on_close(event):
+def on_close():
     streamer.stopStream()
-    sys.exit(0)
 
 if __name__ == "__main__":
     streamer = streamHandler()
     fig = figureHandler()
-    threading.Thread(target=streamer.startStream).start()
-    threading.Thread(target=fig.run()).start()
-    plt.show()
+    fig.app.aboutToQuit.connect(on_close)
+    threading.Thread(target=streamer.startStream, daemon=True).start()
+    fig.run()
  
