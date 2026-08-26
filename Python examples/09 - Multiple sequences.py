@@ -67,6 +67,9 @@ async def main():
     await webSocket.next_async_websocket(uri, msg_func)
 
 if __name__ == "__main__":
+    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightA", json=True)
+    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightC", json=True)
+    
     # Makes it so BBLCeq and BBLAeq is true incase they're set to false on the SLM
     requests.put(host + "/webxi/Applications/SLM/Setup/BBLCeq", json=True)
     requests.put(host + "/webxi/Applications/SLM/Setup/BBLAeq", json=True)
