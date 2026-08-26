@@ -29,9 +29,11 @@ from dotenv import load_dotenv
 import os
 
 # FLAC streaming is only available on 2255
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 ip = os.getenv("IP")
-host = "http://" + ip
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
 sequenceID = 157
 
 
