@@ -23,8 +23,9 @@ def setup_stream(host,ip,sequenceID,StreamName):
 def get_stream_ID(host, streamName):
     """This function shows how to find the ID of a specific stream with specific name"""
     streams = requests.get(host + "/WebXi/Streams?recursive").json()
-    for count, subtree in enumerate(streams.values(), 1): # Start at 1 as the stream count does this
-        if subtree["Name"] == streamName: return count
+    # The keys are the stream IDs and are not renumbered when a stream is deleted
+    matches = [int(ID) for ID, subtree in streams.items() if subtree["Name"] == streamName]
+    return max(matches) if matches else None
 
 def data_type_conv(data_type, value, vector_length):
     """Convert the byte data retrived from BK2245 to Int16 format\n
