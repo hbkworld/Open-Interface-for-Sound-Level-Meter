@@ -9,9 +9,11 @@ import time # For the 'sleep' funtion
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 ip = os.getenv("IP")
-host = "http://" + ip
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
 
 """
 Run program loop 'forever' to fetch LAF from the SLM (or until aborted, eg by ctrl/c)
