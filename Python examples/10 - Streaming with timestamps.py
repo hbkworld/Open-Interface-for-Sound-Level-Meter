@@ -31,9 +31,11 @@ from dotenv import load_dotenv
 import os
 
 # Setup device 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 ip = os.getenv("IP")
-host = "http://" + ip
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
 socket.gethostbyname(socket.gethostname())
 
 # Setup streaming info. Here we will stream an LAeq stream with timestamps.
