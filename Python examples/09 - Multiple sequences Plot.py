@@ -21,9 +21,11 @@ import HelpFunctions.websocket_handler as webSocket     # Async functions to con
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 ip = os.getenv("IP")
-host = "http://" + ip
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
 # Incase of error make sure the sequences are enabled on the SLM.
