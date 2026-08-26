@@ -112,7 +112,7 @@ def on_close(event):
 
 if __name__ == "__main__":
     requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightA", json=True)
-    requests.put(host + "/webxi/Applications/SLM/Setup/CPBLAeq", json=True)
+    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBLAeq", json=True)
     ID, sequence = seq.get_sequence(host, getSequenceID(host, "CPBLAeq"))
 
     CPB_LAeq = CPB_SLM(sequence)
