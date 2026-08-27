@@ -63,24 +63,34 @@ class streamHandler:
     def _streamFunc(self, msg):
         self.dataClass.msg_func(msg)
         if not self.RunStream:
-            self.fut.set_result(True)
+            self._resolve()
     
     def startStream(self):
         self.RunStream = True
         asyncio.run(self.runStream())
     
     async def runStream(self):
-        loop = asyncio.get_running_loop()
-        self.fut = loop.create_future()
+        self.loop = asyncio.get_running_loop()
+        self.fut = self.loop.create_future()
         self.msg_func = lambda msg : self._streamFunc(msg)
-        loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
+        task = self.loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
         await self.fut
+        task.cancel()
         meas.stop_measurement(host)
-        streamID = stream.get_stream_ID(host, self.streamName)
-        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+        
 
     def stopStream(self):
         self.RunStream = False
+        # Signal runStream to stop; cleanup happens via future resolution and stream deletion
+        if hasattr(self, "loop"):
+            self.loop.call_soon_threadsafe(self._resolve)
+        streamID = stream.get_stream_ID(host, self.streamName)
+        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+
+    def _resolve(self):
+        if not self.fut.done():
+            self.fut.set_result(True)
+       
 
 class FigureHandler:
     
@@ -107,7 +117,6 @@ class FigureHandler:
 
 def on_close(event):
     stream_handler.stopStream()
-    sys.exit(0)    
 
 if __name__ == "__main__":
     # makes sure no other CPBFreqWeight is occupying spot 1
@@ -123,6 +132,6 @@ if __name__ == "__main__":
     stream_handler = streamHandler(CPB_LAeq, "CPB test", ID)
     stream_handler.streamInit()
     fig = FigureHandler(CPB_LAeq)
-    threading.Thread(target=stream_handler.startStream).start()
+    threading.Thread(target=stream_handler.startStream, daemon=True).start()
     fig.startAnimation()
     plt.show()

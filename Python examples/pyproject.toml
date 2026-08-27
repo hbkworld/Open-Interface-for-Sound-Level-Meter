@@ -1,0 +1,20 @@
+[project]
+name = "python-examples"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.6"
+dependencies = [
+    "requests",
+    "numpy",
+    "websockets",
+    "kaitaistruct",
+    "matplotlib",
+    "drawnow",
+    "miniaudio",
+    "python-dotenv",
+    "pyqtgraph",
+    "PyQt5",
+    "PyQt5-Qt5<5.15.11",
+    "packaging",
+]

@@ -8,4 +8,5 @@ miniaudio
 python-dotenv
 pyqtgraph
 PyQt5
+PyQt5-Qt5<5.15.11
 packaging
