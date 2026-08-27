@@ -18,8 +18,3 @@ dependencies = [
     "PyQt5-Qt5<5.15.11",
     "packaging",
 ]
-
-
-[build-system]
-requires = ["uv_build>=0.12.5,<0.13.0"]
-build-backend = "uv_build"
