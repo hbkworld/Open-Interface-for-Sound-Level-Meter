@@ -40,19 +40,26 @@ uv run '.\01 - Getting device information.py'
 
 First create and activate a virtual environment, so the packages are not installed into your system Python:
 
-```Powershell
+Windows
+
+```
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.venv\Scripts\activate
+```
+Mac and Linux
+```
+python -m venv .venv
+source .venv\bin\activate
 ```
 On macOS and Linux the second command is `source .venv/bin/activate` instead. Once active, the environment name is shown in the terminal prompt. Use `deactivate` to leave it again.
 
 To run the given examples must different Python modules be installed. To do this run the following two commands in a given terminal
-```Powershell
+```
 python -m pip install -r requirements.txt
 python -m pip install .
 ```
 where python is your python environment, change this if e.g. a virtual environment is wanted or if multiple python versions are installed. It is now possible to run all of the examples using a terminal as
-```Powershell
+```
 python "01 - Getting device information.py"
 ```
 
