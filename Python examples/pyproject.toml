@@ -19,8 +19,7 @@ dependencies = [
     "packaging",
 ]
 
-[project.scripts]
-python-examples = "python_examples:main"
+# Examples are run directly; no [project.scripts] entrypoint is defined.
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
