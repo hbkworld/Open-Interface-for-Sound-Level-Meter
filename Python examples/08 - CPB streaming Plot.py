@@ -81,7 +81,7 @@ class streamHandler:
 
     def stopStream(self):
         self.RunStream = False
-        # Only signal here, the stream must stay alive until runStream has finished awaiting
+        # Signal runStream to stop; cleanup happens via future resolution and stream deletion
         if hasattr(self, "loop"):
             self.loop.call_soon_threadsafe(self._resolve)
         streamID = stream.get_stream_ID(host, self.streamName)
