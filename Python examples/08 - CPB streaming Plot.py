@@ -6,6 +6,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from HelpFunctions import webxi_helper_functions as webxi_helper
 
 # Modules to convert webxi data
 import webxi.webxi_header as webxiHead
@@ -119,13 +120,11 @@ def on_close(event):
     stream_handler.stopStream()
 
 if __name__ == "__main__":
-    # makes sure no other CPBFreqWeight is occupying spot 1
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightB", json=False)
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightC", json=False)
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightZ", json=False)
-    
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightA", json=True)
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBLAeq", json=True)
+    webxi_helper.turn_off_CPB_freq_weight(host)
+
+    webxi_helper.turn_on_CPB_freq_weight(host, ["A"])
+
+    webxi_helper.turn_on_CPB_l_eq(host, ["LAeq"])
     ID, sequence = seq.get_sequence(host, getSequenceID(host, "CPBLAeq"))
 
     CPB_LAeq = CPB_SLM(sequence)

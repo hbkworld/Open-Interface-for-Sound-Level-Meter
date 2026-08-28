@@ -8,6 +8,8 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from HelpFunctions import webxi_helper_functions as webxi_helper
+
 
 # Modules to convert webxi data
 import webxi.webxi_header as webxiHead
@@ -28,7 +30,6 @@ if not ip:
 host = f"http://{ip}"
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
-# Incase of error make sure the sequences are enabled on the SLM.
 sequenceNames = ["LAeq", "LCeq"]
 
 def getSequenceID(host, SqeuenceName):
@@ -67,14 +68,13 @@ async def main():
     await webSocket.next_async_websocket(uri, msg_func)
 
 if __name__ == "__main__":
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightB", json=False)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightZ", json=False)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightA", json=True)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightC", json=True)
-    
-    # Makes it so BBLCeq and BBLAeq is true incase they're set to false on the SLM
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBLCeq", json=True)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBLAeq", json=True)
+    # turns off all BB freq weights to prevent interference
+    webxi_helper.turn_off_bb_freq_weight(host)
 
+    # turns on the wanted BB freq weights for this example
+    webxi_helper.turn_on_bb_freq_weight(host, ["A", "C"])
+
+    # sets the sequences to true. You can add or remove sequences at the top of the file.
+    webxi_helper.turn_on_bbl_eq(host, sequenceNames)
 
     asyncio.run(main())

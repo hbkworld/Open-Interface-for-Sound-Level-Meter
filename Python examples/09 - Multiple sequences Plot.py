@@ -18,6 +18,7 @@ import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
+from HelpFunctions import webxi_helper_functions as webxi_helper
 from dotenv import load_dotenv
 import os
 
@@ -38,15 +39,14 @@ def getSequenceID(host, SqeuenceName):
 class streamHandler:
 
     def __init__(self, startStream = False):
-        requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightB", json=False)
-        requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightZ", json=False)
+        # turns off all BB freq weights to prevent interference
+        webxi_helper.turn_off_bb_freq_weight(host)
 
-        requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightA", json=True)
-        requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightC", json=True)
-        
-        # Makes it so BBLCeq and BBLAeq is true incase they're set to false on the SLM
-        requests.put(host + "/webxi/Applications/SLM/Setup/BBLCeq", json=True)
-        requests.put(host + "/webxi/Applications/SLM/Setup/BBLAeq", json=True)
+        # turns on the wanted BB freq weights for this example
+        webxi_helper.turn_on_bb_freq_weight(host, ["A", "C"])
+
+        # sets the sequences to true. You can add or remove sequences at the top of the file.
+        webxi_helper.turn_on_bbl_eq(host, sequenceNames)
 
         self.streamInit()
         if startStream:
