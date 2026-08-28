@@ -19,14 +19,8 @@ import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measu
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
 from HelpFunctions import webxi_helper_functions as webxi_helper
-from dotenv import load_dotenv
-import os
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+host, ip = webxi_helper.set_host_ip(__file__)
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
 # Incase of error make sure the sequences are enabled on the SLM.
@@ -39,15 +33,6 @@ def getSequenceID(host, SqeuenceName):
 class streamHandler:
 
     def __init__(self, startStream = False):
-        # turns off all BB freq weights to prevent interference
-        webxi_helper.turn_off_bb_freq_weight(host)
-
-        # turns on the wanted BB freq weights for this example
-        webxi_helper.turn_on_bb_freq_weight(host, ["A", "C"])
-
-        # sets the sequences to true. You can add or remove sequences at the top of the file.
-        webxi_helper.turn_on_bbl_eq(host, sequenceNames)
-
         self.streamInit()
         if startStream:
             self.startStream()
@@ -148,6 +133,15 @@ def on_close(event):
     streamer.stopStream()
 
 if __name__ == "__main__":
+    # turns off all BB freq weights to prevent interference
+    webxi_helper.turn_off_bb_freq_weight(host)
+
+    # turns on the wanted BB freq weights for this example
+    webxi_helper.turn_on_bb_freq_weight(host, ["A", "C"])
+
+    # sets the sequences to true. You can add or remove sequences at the top of the file.
+    webxi_helper.turn_on_bbl_eq(host, sequenceNames)
+
     streamer = streamHandler()
     fig = FigHandler(streamer.sequenceFuncs)
     fig.startAnimation()

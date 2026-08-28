@@ -3,6 +3,7 @@ import requests
 import sys
 import pyqtgraph as pg
 import numpy as np
+from HelpFunctions import webxi_helper_functions as webxi_helper
 
 # Modules to convert webxi data
 import webxi.webxi_stream as webxiStream
@@ -28,11 +29,15 @@ from dotenv import load_dotenv
 import os
 
 # FLAC streaming is only available on 2255
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+
+host, ip = webxi_helper.set_host_ip(__file__)
+# host = f"http://{ip}"
+
+# load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+# ip = os.getenv("IP")
+# if not ip:
+#     raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+# host = f"http://{ip}"
 sequenceID = 157
 
 
