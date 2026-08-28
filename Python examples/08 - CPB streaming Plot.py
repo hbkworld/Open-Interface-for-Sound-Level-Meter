@@ -79,8 +79,7 @@ class streamHandler:
         # Signal runStream to stop; cleanup happens via future resolution and stream deletion
         if hasattr(self, "loop"):
             self.loop.call_soon_threadsafe(self._resolve)
-        streamID = stream.get_stream_ID(host, self.streamName)
-        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+        stream.delete_stream(host, self.streamName) # Cleaning up and deleting the stream used
 
     def _resolve(self):
         if not self.fut.done():
