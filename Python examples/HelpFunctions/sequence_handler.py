@@ -25,6 +25,10 @@ def find_sequence_by_name(sequenceName, sequences):
                     return int(count)
                 elif isinstance(test, int) and test:
                     return test
+
+def getSequenceID(host, sequenceName):
+    sequences = requests.get(host + "/webxi/sequences?recursive").json()
+    return find_sequence_by_name(sequenceName, sequences)    
         
 
 def get_sequence(hostID,ID):
