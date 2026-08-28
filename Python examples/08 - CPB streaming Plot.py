@@ -40,9 +40,6 @@ class CPB_SLM:
         octaves = 10**(0.1*octaveRange)
         return [bb(i) for i in octaves]
 
-def getSequenceID(host, SqeuenceName):
-    sequences = requests.get(host + "/webxi/sequences?recursive").json()
-    return seq.find_sequence_by_name(SqeuenceName, sequences)
 
 class streamHandler:
     
@@ -122,7 +119,7 @@ if __name__ == "__main__":
     # turns on the CPB eq we want to use
     webxi_helper.turn_on_CPB_l_eq(host, ["LAeq"])
 
-    ID, sequence = seq.get_sequence(host, getSequenceID(host, "CPBLAeq"))
+    ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, "CPBLAeq"))
 
     CPB_LAeq = CPB_SLM(sequence)
     stream_handler = streamHandler(CPB_LAeq, "CPB test", ID)

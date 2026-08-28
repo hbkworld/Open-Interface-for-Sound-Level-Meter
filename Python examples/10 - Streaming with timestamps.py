@@ -60,9 +60,6 @@ class timeStamps:
         self.__timeBuffer = np.append(self.__timeBuffer[1:], NewValue)
         return self.lastTime
 
-def getSequenceID(host, SqeuenceName):
-    sequences = requests.get(host + "/webxi/sequences?recursive").json()
-    return seq.find_sequence_by_name(SqeuenceName, sequences)
 
 def print_data(message, IDs, sequences, sequenceFuncs):
     package = webxiStream.WebxiStream.from_bytes(message)
@@ -98,7 +95,7 @@ async def main():
     sequenceFuncs = []
 
     for x in sequenceNames:
-        ID, sequence = seq.get_sequence(host, getSequenceID(host, x))
+        ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, x))
         IDs.append(ID)
         sequences.append(sequence)
         sequenceFuncs.append(MovingLeq(10, storedata=True) if sequence['DataType'] == "Int16" else timeStamps(101))

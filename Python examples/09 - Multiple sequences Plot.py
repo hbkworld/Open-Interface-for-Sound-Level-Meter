@@ -26,9 +26,6 @@ host, ip = webxi_helper.set_host_ip(__file__)
 # Incase of error make sure the sequences are enabled on the SLM.
 sequenceNames = ["LAeq", "LCeq"]
 
-def getSequenceID(host, SqeuenceName):
-    sequences = requests.get(host + "/webxi/sequences?recursive").json()
-    return seq.find_sequence_by_name(SqeuenceName, sequences)
     
 class streamHandler:
 
@@ -43,7 +40,7 @@ class streamHandler:
         self.sequenceFuncs = []
 
         for x in sequenceNames:
-            ID, sequence = seq.get_sequence(host, getSequenceID(host, x))
+            ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, x))
             self.IDs.append(ID)
             self.sequences.append(sequence)
             self.sequenceFuncs.append(MovingLeq(10, storedata=True, windowSize=100))
