@@ -7,11 +7,15 @@ import requests
 from dotenv import load_dotenv
 import os
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+
 ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+if not ip:
+
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+
+host = f"http://{ip}"
+
 
 """
 The "SLM" node under /webxi/applications contains everything related to Sound Level Meter functionallity.
