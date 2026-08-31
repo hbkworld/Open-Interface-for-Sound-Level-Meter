@@ -10,18 +10,13 @@ The interface to the sound level meter consists of 2 parts. The REST protocol an
 The REST interface is accessed using normal HTTP requests and JSON, in this example done using the "requests" library.
 """
 import requests
-from dotenv import load_dotenv
-import os
+from HelpFunctions import webxi_helper_functions as webxi_helper
 
 """
-Create a .env file in the same folder as this script and add a line with the IP = "the ip of your SLM".
+Create a .env file in the same folder as this script and add a line with the IP = "the ip of your SLM"
+Or run uv run '.\01 - Getting device information.py' and you will be prompted to manually input your SLM ip and stored in .env for next for future uses.
 """
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+host, ip = webxi_helper.set_host_ip(__file__)
 
 
 
