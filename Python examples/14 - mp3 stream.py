@@ -25,14 +25,9 @@ import threading
 
 from HelpFunctions.FigureHandler import FigureHandler
 from HelpFunctions.tmpFileStateMachine import TmpfileStateMachine
-from dotenv import load_dotenv
-import os
+from HelpFunctions import webxi_helper_functions as webxi_helper
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+host, ip = webxi_helper.set_host_ip(__file__)
 sequenceID = 156
 
 
@@ -107,8 +102,7 @@ class streamHandler:
         # Resolve the future directly; waiting for the next message may never happen
         if hasattr(self, "loop"):
             self.loop.call_soon_threadsafe(self._resolve)
-        streamID = stream.get_stream_ID(host, self.streamName)
-        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+        stream.delete_stream(host, self.streamName) # Cleaning up and deleting the stream used
 
     def _resolve(self):
         if not self.fut.done():

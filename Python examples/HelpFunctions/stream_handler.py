@@ -27,6 +27,12 @@ def get_stream_ID(host, streamName):
     matches = [int(ID) for ID, subtree in streams.items() if subtree["Name"] == streamName]
     return max(matches) if matches else None
 
+def delete_stream(host, streamName):
+    """Look up a stream by name and delete it, cleaning up the device resources used"""
+    streamID = get_stream_ID(host, streamName)
+    if streamID is not None:
+        response = requests.delete(host + "/WebXi/Streams/" + str(streamID), timeout=10)
+        response.raise_for_status()
 def data_type_conv(data_type, value, vector_length):
     """Convert the byte data retrived from BK2245 to Int16 format\n
        The byte format is in 'little'"""

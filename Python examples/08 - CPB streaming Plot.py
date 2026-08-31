@@ -6,6 +6,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from HelpFunctions import webxi_helper_functions as webxi_helper
 
 # Modules to convert webxi data
 import webxi.webxi_header as webxiHead
@@ -15,14 +16,8 @@ import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LA
 import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from dotenv import load_dotenv
-import os
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+host, ip = webxi_helper.set_host_ip(__file__)
 sequenceID = 35
 
 class CPB_SLM:
@@ -45,9 +40,6 @@ class CPB_SLM:
         octaves = 10**(0.1*octaveRange)
         return [bb(i) for i in octaves]
 
-def getSequenceID(host, SqeuenceName):
-    sequences = requests.get(host + "/webxi/sequences?recursive").json()
-    return seq.find_sequence_by_name(SqeuenceName, sequences)
 
 class streamHandler:
     
@@ -84,8 +76,7 @@ class streamHandler:
         # Signal runStream to stop; cleanup happens via future resolution and stream deletion
         if hasattr(self, "loop"):
             self.loop.call_soon_threadsafe(self._resolve)
-        streamID = stream.get_stream_ID(host, self.streamName)
-        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+        stream.delete_stream(host, self.streamName) # Cleaning up and deleting the stream used
 
     def _resolve(self):
         if not self.fut.done():
@@ -119,14 +110,16 @@ def on_close(event):
     stream_handler.stopStream()
 
 if __name__ == "__main__":
-    # makes sure no other CPBFreqWeight is occupying spot 1
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightB", json=False)
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightC", json=False)
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightZ", json=False)
-    
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBFreqWeightA", json=True)
-    requests.put(host + "/WebXi/Applications/SLM/Setup/CPBLAeq", json=True)
-    ID, sequence = seq.get_sequence(host, getSequenceID(host, "CPBLAeq"))
+    # turns off all CPB freq weights
+    webxi_helper.turn_off_CPB_freq_weight(host)
+
+    # turns on the CPB freq weight we want to use, in this case A weight
+    webxi_helper.turn_on_CPB_freq_weight(host, ["A"])
+
+    # turns on the CPB eq we want to use
+    webxi_helper.turn_on_cpb_leq(host, ["LAeq"])
+
+    ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, "CPBLAeq"))
 
     CPB_LAeq = CPB_SLM(sequence)
     stream_handler = streamHandler(CPB_LAeq, "CPB test", ID)

@@ -8,6 +8,8 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from HelpFunctions import webxi_helper_functions as webxi_helper
+
 
 # Modules to convert webxi data
 import webxi.webxi_header as webxiHead
@@ -18,22 +20,12 @@ import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from dotenv import load_dotenv
-import os
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+host, ip = webxi_helper.set_host_ip(__file__)
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
-# Incase of error make sure the sequences are enabled on the SLM.
 sequenceNames = ["LAeq", "LCeq"]
 
-def getSequenceID(host, SqeuenceName):
-    sequences = requests.get(host + "/webxi/sequences?recursive").json()
-    return seq.find_sequence_by_name(SqeuenceName, sequences)
 
 def print_data(message, IDs, sequences, sequenceFuncs):
     package = webxiStream.WebxiStream.from_bytes(message)
@@ -53,7 +45,7 @@ async def main():
     sequenceFuncs = []
 
     for x in sequenceNames:
-        ID, sequence = seq.get_sequence(host, getSequenceID(host, x))
+        ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, x))
         IDs.append(ID)
         sequences.append(sequence)
         sequenceFuncs.append(MovingLeq(10, storedata=True))
@@ -67,14 +59,13 @@ async def main():
     await webSocket.next_async_websocket(uri, msg_func)
 
 if __name__ == "__main__":
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightB", json=False)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightZ", json=False)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightA", json=True)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightC", json=True)
-    
-    # Makes it so BBLCeq and BBLAeq is true incase they're set to false on the SLM
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBLCeq", json=True)
-    requests.put(host + "/webxi/Applications/SLM/Setup/BBLAeq", json=True)
+    # turns off all BB freq weights to prevent interference
+    webxi_helper.turn_off_bb_freq_weight(host)
 
+    # turns on the wanted BB freq weights for this example
+    webxi_helper.turn_on_bb_freq_weight(host, ["A", "C"])
+
+    # sets the sequences to true. You can add or remove sequences at the top of the file.
+    webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
     asyncio.run(main())

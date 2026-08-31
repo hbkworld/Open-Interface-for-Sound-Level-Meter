@@ -16,11 +16,13 @@ import os
 """
 Create a .env file in the same folder as this script and add a line with the IP = "the ip of your SLM".
 """
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+
 ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+if not ip:
+    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+host = f"http://{ip}"
+
 
 
 """

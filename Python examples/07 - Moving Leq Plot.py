@@ -21,14 +21,9 @@ import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measu
 import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
 from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from dotenv import load_dotenv
-import os
+from HelpFunctions import webxi_helper_functions as webxi_helper
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+host, ip = webxi_helper.set_host_ip(__file__)
 sequenceID = 6
 
 leq_10_mov = MovingLeq(10, storedata=True)
@@ -88,8 +83,7 @@ class streamHandler:
         self.StreamRun = False  
         if hasattr(self, "loop"):
             self.loop.call_soon_threadsafe(self._resolve)
-        streamID = stream.get_stream_ID(host, self.streamName)
-        requests.delete(host + "/WebXi/Streams/" + str(streamID)) # Cleaning up and deleting the stream used
+        stream.delete_stream(host, self.streamName) # Cleaning up and deleting the stream used
 
     def _resolve(self):
         if not self.fut.done():

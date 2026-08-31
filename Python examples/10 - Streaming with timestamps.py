@@ -27,15 +27,10 @@ import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measu
 import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
 from HelpFunctions.Leq import SLM_Setup_LAeq, MovingLeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from dotenv import load_dotenv
-import os
+from HelpFunctions import webxi_helper_functions as webxi_helper
 
 # Setup device 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-ip = os.getenv("IP")
-if not ip:
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-host = f"http://{ip}"
+host, ip = webxi_helper.set_host_ip(__file__)
 socket.gethostbyname(socket.gethostname())
 
 # Setup streaming info. Here we will stream an LAeq stream with timestamps.
@@ -65,9 +60,6 @@ class timeStamps:
         self.__timeBuffer = np.append(self.__timeBuffer[1:], NewValue)
         return self.lastTime
 
-def getSequenceID(host, SqeuenceName):
-    sequences = requests.get(host + "/webxi/sequences?recursive").json()
-    return seq.find_sequence_by_name(SqeuenceName, sequences)
 
 def print_data(message, IDs, sequences, sequenceFuncs):
     package = webxiStream.WebxiStream.from_bytes(message)
@@ -103,7 +95,7 @@ async def main():
     sequenceFuncs = []
 
     for x in sequenceNames:
-        ID, sequence = seq.get_sequence(host, getSequenceID(host, x))
+        ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, x))
         IDs.append(ID)
         sequences.append(sequence)
         sequenceFuncs.append(MovingLeq(10, storedata=True) if sequence['DataType'] == "Int16" else timeStamps(101))
