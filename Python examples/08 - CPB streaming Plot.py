@@ -117,7 +117,7 @@ if __name__ == "__main__":
     webxi_helper.turn_on_CPB_freq_weight(host, ["A"])
 
     # turns on the CPB eq we want to use
-    webxi_helper.turn_on_CPB_l_eq(host, ["LAeq"])
+    webxi_helper.turn_on_cpb_leq(host, ["LAeq"])
 
     ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, "CPBLAeq"))
 

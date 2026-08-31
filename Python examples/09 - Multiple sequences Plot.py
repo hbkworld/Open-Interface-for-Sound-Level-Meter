@@ -136,7 +136,7 @@ if __name__ == "__main__":
     webxi_helper.turn_on_bb_freq_weight(host, ["A", "C"])
 
     # sets the sequences to true. You can add or remove sequences at the top of the file.
-    webxi_helper.turn_on_bbl_eq(host, sequenceNames)
+    webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
     streamer = streamHandler()
     fig = FigHandler(streamer.sequenceFuncs)
