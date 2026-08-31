@@ -17,7 +17,7 @@ def turn_on_bb_freq_weight(host, weights):
     for weight in weights:
         _session.put(host + f"/webxi/Applications/SLM/Setup/BBFreqWeight{weight}", json=True)
 
-def turn_on_bbl_eq(host, weights):
+def turn_on_bb_leq(host, weights):
     for weight in weights:
         _session.put(host + f"/webxi/Applications/SLM/Setup/BB{weight}", json=True)
 
@@ -32,13 +32,19 @@ def turn_on_CPB_freq_weight(host, weights):
     for weight in weights:
         _session.put(host + f"/webxi/Applications/SLM/Setup/CPBFreqWeight{weight}", json=True)
 
-def turn_on_CPB_l_eq(host, weights):
+def turn_on_cpb_leq(host, weights):
     for weight in weights:
         _session.put(host + f"/webxi/Applications/SLM/Setup/CPB{weight}", json=True)
 
 def set_host_ip(caller_file):
-    load_dotenv(dotenv_path=os.path.join(os.path.dirname(caller_file), ".env"))
+    env_path = os.path.join(os.path.dirname(caller_file), ".env")
+    load_dotenv(dotenv_path=env_path)
     ip = os.getenv("IP")
     if not ip:
-        raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+        # First run (or missing IP): ask once and persist it to .env for next time
+        ip = input("No IP found. Enter the IP address of your SLM: ").strip()
+        if not ip:
+            raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
+        with open(env_path, "a") as f:
+            f.write(f"IP={ip}\n")
     return f"http://{ip}", ip
