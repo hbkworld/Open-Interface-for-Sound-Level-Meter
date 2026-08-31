@@ -8,10 +8,14 @@ _session = requests.Session()
 
 # Functions to turn on/off BB freq weights and sequences. These are used in the examples to make sure the wanted sequences are enabled on the SLM.
 def turn_off_bb_freq_weight(host):
-    _session.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightB", json=False)
-    _session.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightZ", json=False)
-    _session.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightA", json=False)
-    _session.put(host + "/webxi/Applications/SLM/Setup/BBFreqWeightC", json=False)
+    for endpoint in (
+        "/webxi/Applications/SLM/Setup/BBFreqWeightB",
+        "/webxi/Applications/SLM/Setup/BBFreqWeightZ",
+        "/webxi/Applications/SLM/Setup/BBFreqWeightA",
+        "/webxi/Applications/SLM/Setup/BBFreqWeightC",
+    ):
+        response = _session.put(host + endpoint, json=False, timeout=10)
+        response.raise_for_status()
 
 def turn_on_bb_freq_weight(host, weights):
     for weight in weights:
