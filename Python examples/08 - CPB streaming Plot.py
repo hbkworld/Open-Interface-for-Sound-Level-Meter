@@ -42,23 +42,26 @@ class CPB_SLM:
 
 
 class streamHandler:
-    
-    def __init__(self, dataClass, streamName, sequenceID):
-        self.dataClass = dataClass
-        self.streamName = streamName
-        self.sequenceID = sequenceID
+
+    def __init__(self, startStream = False):
+        self.streamInit()
+        if startStream:
+            self.startStream()
 
     def streamInit(self):
-        self.uri = stream.setup_stream(host, ip, self.sequenceID, self.streamName)
+        ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, "CPBLAeq"))
+        self.dataClass = CPB_SLM(sequence)
+        self.streamName = "CPB test"
+        self.uri = stream.setup_stream(host, ip, ID, self.streamName)
         meas.start_pause_measurement(host, True)
 
     def _streamFunc(self, msg):
         self.dataClass.msg_func(msg)
-        if not self.RunStream:
+        if not self.StreamRun:
             self._resolve()
     
     def startStream(self):
-        self.RunStream = True
+        self.StreamRun = True
         asyncio.run(self.runStream())
     
     async def runStream(self):
@@ -72,7 +75,7 @@ class streamHandler:
         
 
     def stopStream(self):
-        self.RunStream = False
+        self.StreamRun = False
         # Signal runStream to stop; cleanup happens via future resolution and stream deletion
         if hasattr(self, "loop"):
             self.loop.call_soon_threadsafe(self._resolve)
@@ -119,12 +122,8 @@ if __name__ == "__main__":
     # turns on the CPB eq we want to use
     webxi_helper.turn_on_cpb_leq(host, ["LAeq"])
 
-    ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, "CPBLAeq"))
-
-    CPB_LAeq = CPB_SLM(sequence)
-    stream_handler = streamHandler(CPB_LAeq, "CPB test", ID)
-    stream_handler.streamInit()
-    fig = FigureHandler(CPB_LAeq)
+    stream_handler = streamHandler()
+    fig = FigureHandler(stream_handler.dataClass)
     threading.Thread(target=stream_handler.startStream, daemon=True).start()
     fig.startAnimation()
     plt.show()
