@@ -2,19 +2,19 @@ import asyncio
 import socket
 import requests
 # Modules to convert webxi data
-import webxi.webxi_header as webxiHead
-import webxi.webxi_stream as webxiStream
+from slm_api.webxi import webxi_header as webxiHead
+from slm_api.webxi import webxi_stream as webxiStream
 # Help functions located in HelpFunction folder
 # Read these files to get examples on how to communicate with the SLM
-import HelpFunctions.stream_handler as stream           # SLM stream functions
-import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
-import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
-from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
-import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from HelpFunctions import webxi_helper_functions as webxi_helper
+from slm_api.helpers import stream_handler as stream           # SLM stream functions
+from slm_api.helpers import measurment_handler as meas         # Start/pause/Stop measurments functions
+from slm_api.helpers import sequence_handler as seq            # Get sequences, e.g. LAeq functions
+from slm_api.helpers.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
+from slm_api.helpers import websocket_handler as webSocket     # Async functions to control communication
+from slm_api.helpers.webxi_helper_functions import set_host_ip
 
-# Setup device 
-host, ip = webxi_helper.set_host_ip(__file__)
+
+host, ip = set_host_ip(__file__)
 socket.gethostbyname(socket.gethostname())
 
 # Setup streaming info 
