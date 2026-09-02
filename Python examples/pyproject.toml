@@ -3,7 +3,7 @@ name = "python-examples"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.12"
 dependencies = [
     "requests",
     "numpy",
@@ -17,4 +17,5 @@ dependencies = [
     "PyQt5",
     "PyQt5-Qt5<5.15.11",
     "packaging",
+    "slm-open-api-package==0.1.0",
 ]
