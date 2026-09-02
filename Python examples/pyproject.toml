@@ -17,5 +17,5 @@ dependencies = [
     "PyQt5",
     "PyQt5-Qt5<5.15.11",
     "packaging",
-    "slm-open-api-package==0.1.0",
+    "slm-open-api-package>=0.1.2",
 ]

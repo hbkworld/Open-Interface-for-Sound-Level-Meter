@@ -2,19 +2,12 @@
 This README will guide you through the setup process as well as how to run the different examples. 
 
 ## Requirements
-1. python >= 3.6
+1. python >= 3.12
 2. See top folder README for more
 3. Add git to the environment variables
 4. A C++ compiler for building miniaudio (MP3/FLAC streams)
-5. Create a `.env` file in the same folder as the examples and add:
-
-   ```
-   IP="the ip of your SLM"
-   ```
-
-    Or you can manually change the ip to match your SLM in each example.
-
-    The `.env` file is listed in `.gitignore`, so it is never committed and must be created locally after cloning.
+5. First time setup, either create a file called slm_ip and the root of your project and input your slm ip inside. It's also possible to uv run one of the examples and you will be prompted to type your slm ip and slm_ip will be created at the same folder as your pyproject.toml file.
+    Add slm_ip to your .gitignore. If examples can't connect to your slm check the slm_ip file and see if it's the correct ip address.
 
 
 It is recommended to install VSCode, Sublime Text 3, or similar to run and edit the code. To not break any Python installation it is recommended to use either a docker or a Python virtual environment to run the test, see references.
