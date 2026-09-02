@@ -1,20 +1,10 @@
-import asyncio
 import socket
-import requests
-# Modules to convert webxi data
-from slm_api.webxi import webxi_header as webxiHead
-from slm_api.webxi import webxi_stream as webxiStream
-# Help functions located in HelpFunction folder
-# Read these files to get examples on how to communicate with the SLM
-from slm_api.helpers import stream_handler as stream           # SLM stream functions
-from slm_api.helpers import measurment_handler as meas         # Start/pause/Stop measurments functions
-from slm_api.helpers import sequence_handler as seq            # Get sequences, e.g. LAeq functions
-from slm_api.helpers.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
-from slm_api.helpers import websocket_handler as webSocket     # Async functions to control communication
-from slm_api.helpers.webxi_helper_functions import set_host_ip
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
+from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
 
-host, ip = set_host_ip(__file__)
+
+host, ip = webxi_helper.set_host_ip(__file__)
 socket.gethostbyname(socket.gethostname())
 
 # Setup streaming info 
@@ -22,44 +12,6 @@ socket.gethostbyname(socket.gethostname())
 sequenceId = 6
 
 
-def print_LAeq_mov(message, data_type, leq_mov):
-    """This is the function handling the data from the BK2245\n
-       This function prints the data to the terminal in the format:\n
-       "LAeq: Inst_Val | LAeq,mov,10s: AVG_Val"""
-    package = webxiStream.WebxiStream.from_bytes(message)
-    if package.header.message_type == webxiStream.WebxiStream.Header.EMessageType.e_sequence_data:
-        value = package.content.sequence_blocks[0].values
-        # Convert data from binary stream data to Int format
-        LAeq_value = stream.data_type_conv(data_type, value, None) / 100 
-        LAeq_mov_value = leq_mov.move(LAeq_value)
-        print("LAeq: " + "%.1f" % LAeq_value + "  |  LAeq,mov,10s:" + "%.1f" % LAeq_mov_value)
-
-async def main():
-    # Setup the SLM to run LAeq 
-    SLM_Setup_LAeq(host)
-
-    # Get ID and object of sequence, the data for the wanted logging mode
-    ID, sequence = seq.get_sequence(host,sequenceId) 
-
-    # Get URI for stream
-    uri = stream.setup_stream(host,ip,ID,"Test")   
-
-    # Get datatype of the logging data 
-    data_type = sequence["DataType"]  
-
-    # Start a measurement. This is needed to obtain data from the device
-    meas.start_pause_measurement(host,True)
-
-    # Initilize a MovingLeq object to handle the data. 
-    # This example uses a 10s moving leq (assuming 1s logging)
-    leq_10_mov = MovingLeq(10)
-
-    # Create lambda function to use for the stream message. In this example is a function
-    # call used
-    msg_func = lambda msg : print_LAeq_mov(msg, data_type, leq_10_mov)
-
-    # Initilize and run the websocket to retrive data
-    await webSocket.next_async_websocket(uri,msg_func)
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceId)
+    streamer.startStream()
