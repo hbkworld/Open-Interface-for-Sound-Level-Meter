@@ -1,24 +1,12 @@
 # This example will show how to stream multiple sequences at the same time using the same stream
 # For this example enable the wanted sequences on the device
-import asyncio
-import requests
 import threading
-import sys, traceback
 import numpy as np
-import time
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-# Modules to convert webxi data
-import webxi.webxi_header as webxiHead
-import webxi.webxi_stream as webxiStream
-
-import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
-import HelpFunctions.stream_handler as stream           # SLM stream functions
-import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
-from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving Leq 
-import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from HelpFunctions import webxi_helper_functions as webxi_helper
+from slm_api.helpers.stream_handlers import WebXiStreamHandler
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
 
 host, ip = webxi_helper.set_host_ip(__file__)
 
@@ -26,70 +14,6 @@ host, ip = webxi_helper.set_host_ip(__file__)
 # Incase of error make sure the sequences are enabled on the SLM.
 sequenceNames = ["LAeq", "LCeq"]
 
-    
-class streamHandler:
-
-    def __init__(self, startStream = False):
-        self.streamInit()
-        if startStream:
-            self.startStream()
-
-    def streamInit(self):
-        self.IDs = []
-        self.sequences = []
-        self.sequenceFuncs = []
-
-        for x in sequenceNames:
-            ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, x))
-            self.IDs.append(ID)
-            self.sequences.append(sequence)
-            self.sequenceFuncs.append(MovingLeq(10, storedata=True, windowSize=100))
-
-        self.streamName = "MultipleSequences"
-        self.uri = stream.setup_stream(host, ip, self.IDs, self.streamName)
-        # Start a measurement. This is needed to obtain data from the device
-        meas.start_pause_measurement(host,True) 
-
-    def startStream(self):
-        self.StreamRun = True
-        asyncio.run(self.runStream())
-
-    async def runStream(self):
-        self.loop = asyncio.get_running_loop()
-        self.fut = self.loop.create_future()
-        # Create lambda function to use for the stream message. In this example is a function
-        # call used
-        self.msg_func = lambda msg : self.print_data(msg, self.IDs, self.sequences, self.sequenceFuncs, self.fut) 
-        # Initilize and run the websocket to retrive data
-        task = self.loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
-        await self.fut
-        task.cancel()
-        meas.stop_measurement(host)
-
-    def stopStream(self):
-        self.StreamRun = False  
-        if hasattr(self, "loop"):
-            self.loop.call_soon_threadsafe(self._resolve)
-        stream.delete_stream(host, self.streamName) # Cleaning up and deleting the stream used
-
-    def _resolve(self):
-        if not self.fut.done():
-            self.fut.set_result(True)
-
-    def print_data(self, message, IDs, sequences, sequenceFuncs, fut):
-        package = webxiStream.WebxiStream.from_bytes(message)
-        if package.header.message_type == webxiStream.WebxiStream.Header.EMessageType.e_sequence_data:
-            for ID, sequence, Func in zip(IDs, sequences, sequenceFuncs):
-                for data in package.content.sequence_blocks:
-                    if data.sequence_id == ID:
-                        value = stream.data_type_conv(sequence["DataType"], data.values, None)
-                        value = (np.array(value) if isinstance(value, list) else value) / 100
-                        move = Func.move(value)
-                        seqName = sequence["Name"]
-                        print(f"{seqName}: {value} and 10s avg: {move:.2f}")
-        
-        if not self.StreamRun:
-            self._resolve()
 
 class FigHandler:  
    
@@ -138,7 +62,7 @@ if __name__ == "__main__":
     # sets the sequences to true. You can add or remove sequences at the top of the file.
     webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
-    streamer = streamHandler()
+    streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True)
     fig = FigHandler(streamer.sequenceFuncs)
     fig.startAnimation()
     threading.Thread(target=streamer.startStream, daemon=True).start()        

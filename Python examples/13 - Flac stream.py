@@ -1,113 +1,23 @@
-import asyncio
-import requests
-import sys
 import pyqtgraph as pg
 import numpy as np
-from HelpFunctions import webxi_helper_functions as webxi_helper
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
 
-# Modules to convert webxi data
-import webxi.webxi_stream as webxiStream
-# Help functions located in HelpFunction folder
-# Read these files to get examples on how to communicate with the SLM
-import HelpFunctions.stream_handler as stream           # SLM stream functions
-# Start/pause/Stop measurments functions
-import HelpFunctions.measurment_handler as meas
-# Get sequences, 
-import HelpFunctions.sequence_handler as seq
-
-# Async functions to control communication
-import HelpFunctions.websocket_handler as webSocket
-from timeit import default_timer as timer
 # Buffer and decoder for the flac stream
-from HelpFunctions.buffer import DataBuffer
-from HelpFunctions.fft import dBfft
-import HelpFunctions.flac_stream_2_samples as flac2samples
+from slm_api.helpers.buffer import DataBuffer
+from slm_api.helpers.fft import dBfft
+
+
+from slm_api.helpers.stream_handlers import WebXiStreamHandler
 import threading
 
 from HelpFunctions.FigureHandler import FigureHandler
-from dotenv import load_dotenv
-import os
+
 
 # FLAC streaming is only available on 2255
 
 host, ip = webxi_helper.set_host_ip(__file__)
 
 sequenceID = 157
-
-
-class streamHandler:
-    def __init__(self, startStream=False):
-        self.i = 0
-        self.max_input = 15.6263 / np.sqrt(2) 
-        self.streamInit()
-        if startStream:
-            self.startStream()
-    
-    def decode_flac_stream(self, message):
-        start = timer()
-        package = webxiStream.WebxiStream.from_bytes(message)
-        if package.header.message_type == webxiStream.WebxiStream.Header.EMessageType.e_sequence_data:
-            # Get the encoded flac block
-            flac = package.content.sequence_blocks[0]          
-            # Decode the compressed samples and add it to the data bufffer 
-            DataBuffer.append(flac2samples.decode(flac, self.calibrationFactor))
-            end = timer()
-            total = (end - start)
-            if 0.0625 < total:
-                print(f"TotalTime: {total}")
-        if not self.StreamRun:
-            self._resolve()
-
-    def get_calibration_factor(self):
-        # Calculate calibration factor from the microphone sensitivity
-        response = requests.get(f"{host}/WebXi/Applications/SLM/Outputs/Sensitivity")
-        assert (response.status_code == 200)
-        mic_sens = float(response.text) # V/Pa
-        max_lvl = 20 * np.log10((self.max_input / mic_sens) / 20e-6)  # dB SPL re 20 uPa
-        self.calibrationFactor = (20e-6 * 10 ** (max_lvl / 20)) / (2 ** 23 - 1) * np.sqrt(2)
-
-    def streamInit(self):
-        # Enable audio recording analysis quality
-        response = requests.put(f"{host}/WebXi/Applications/SLM/setup/AudioRecordingAnalysisQuality", json = 1)
-        assert(response.status_code == 200)
-        self.get_calibration_factor()
-        self.ID, self.sequence = seq.get_sequence(host, sequenceID)
-        # Get URI for stream
-        self.streamName = "Flac stream"
-        self.uri = stream.setup_stream(host, ip, self.ID, self.streamName)
-
-        # Start a measurement. This is needed to obtain data from the device
-        meas.start_pause_measurement(host, True)
-
-    def startStream(self):
-        self.StreamRun = True
-
-        asyncio.run(self.runStream())
-
-    async def runStream(self):
-        self.loop = asyncio.get_running_loop()
-        self.fut = self.loop.create_future()
-        # Create lambda function to use for the stream message. In this example is a function
-        # call used
-        self.msg_func = lambda msg : self.decode_flac_stream(msg) 
-        # Initilize and run the websocket to retrive data
-
-        task = self.loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
-        await self.fut
-        task.cancel()
-        meas.stop_measurement(host)
-
-
-    def stopStream(self):
-        self.StreamRun = False
-        # Resolve the future directly; waiting for the next message may never happen
-        if hasattr(self, "loop"):
-            self.loop.call_soon_threadsafe(self._resolve)
-        stream.delete_stream(host, self.streamName) # Cleaning up and deleting the stream used
-
-    def _resolve(self):
-        if not self.fut.done():
-            self.fut.set_result(True)
 
 
 class figureHandler(FigureHandler):
@@ -150,7 +60,7 @@ def on_close():
     streamer.stopStream()
 
 if __name__ == "__main__":
-    streamer = streamHandler()
+    streamer = WebXiStreamHandler(host, ip, flac=True, sequenceID=sequenceID)
     fig = figureHandler()
     fig.app.aboutToQuit.connect(on_close)
     threading.Thread(target=streamer.startStream, daemon=True).start()

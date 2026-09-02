@@ -1,90 +1,16 @@
-import asyncio
-import requests
 import threading
-import sys, traceback
 import numpy as np
-import time
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from HelpFunctions import webxi_helper_functions as webxi_helper
 
-# Modules to convert webxi data
-import webxi.webxi_header as webxiHead
-import webxi.webxi_stream as webxiStream
-
-import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
-import HelpFunctions.stream_handler as stream           # SLM stream functions
-import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
-import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
+from slm_api.helpers.stream_handlers import WebXiStreamHandler
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
 
 host, ip = webxi_helper.set_host_ip(__file__)
+sequence_names = "CPBLAeq"
+
 sequenceID = 35
 
-class CPB_SLM:
-    def __init__(self, sequence):
-        self.sequence = sequence
-        self.msg_func =  lambda msg : self.print_Data(msg, sequence["DataType"] , sequence["VectorLength"])
-        self.CPB_values = np.zeros(sequence["VectorLength"])
-
-    def print_Data(self, message, data_type, vectLength):
-        package = webxiStream.WebxiStream.from_bytes(message)
-        
-        if package.header.message_type == webxiStream.WebxiStream.Header.EMessageType.e_sequence_data:
-            value = package.content.sequence_blocks[0].values
-            self.CPB_values = np.array(stream.data_type_conv(data_type, value, vectLength)) / 100
-            print(self.CPB_values)
-    
-    def calcFreqBands(self):
-        octaveRange = np.arange(12,44,3) if self.sequence["VectorLength"] == 11 else np.arange(11,44)
-        bb = lambda x : np.round(x * 2) / 2 if  x < 70 else bb(x / 10) * 10
-        octaves = 10**(0.1*octaveRange)
-        return [bb(i) for i in octaves]
-
-
-class streamHandler:
-
-    def __init__(self, startStream = False):
-        self.streamInit()
-        if startStream:
-            self.startStream()
-
-    def streamInit(self):
-        ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, "CPBLAeq"))
-        self.dataClass = CPB_SLM(sequence)
-        self.streamName = "CPB test"
-        self.uri = stream.setup_stream(host, ip, ID, self.streamName)
-        meas.start_pause_measurement(host, True)
-
-    def _streamFunc(self, msg):
-        self.dataClass.msg_func(msg)
-        if not self.StreamRun:
-            self._resolve()
-    
-    def startStream(self):
-        self.StreamRun = True
-        asyncio.run(self.runStream())
-    
-    async def runStream(self):
-        self.loop = asyncio.get_running_loop()
-        self.fut = self.loop.create_future()
-        self.msg_func = lambda msg : self._streamFunc(msg)
-        task = self.loop.create_task(webSocket.next_async_websocket(self.uri, self.msg_func))
-        await self.fut
-        task.cancel()
-        meas.stop_measurement(host)
-        
-
-    def stopStream(self):
-        self.StreamRun = False
-        # Signal runStream to stop; cleanup happens via future resolution and stream deletion
-        if hasattr(self, "loop"):
-            self.loop.call_soon_threadsafe(self._resolve)
-        stream.delete_stream(host, self.streamName) # Cleaning up and deleting the stream used
-
-    def _resolve(self):
-        if not self.fut.done():
-            self.fut.set_result(True)
-       
 
 class FigureHandler:
     
@@ -110,7 +36,7 @@ class FigureHandler:
         self.ani = FuncAnimation(self.fig, self._update, interval=1000) 
 
 def on_close(event):
-    stream_handler.stopStream()
+    streamer.stopStream()
 
 if __name__ == "__main__":
     # turns off all CPB freq weights
@@ -122,8 +48,8 @@ if __name__ == "__main__":
     # turns on the CPB eq we want to use
     webxi_helper.turn_on_cpb_leq(host, ["LAeq"])
 
-    stream_handler = streamHandler()
-    fig = FigureHandler(stream_handler.dataClass)
-    threading.Thread(target=stream_handler.startStream, daemon=True).start()
+    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, cpb=True)
+    fig = FigureHandler(streamer)
+    threading.Thread(target=streamer.startStream, daemon=True).start()
     fig.startAnimation()
     plt.show()
