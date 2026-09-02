@@ -4,17 +4,9 @@
 """
 
 import requests
-from dotenv import load_dotenv
-import os
+from slm_api.helpers.webxi_helper_functions import set_host_ip
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
-
-ip = os.getenv("IP")
-if not ip:
-
-    raise RuntimeError('Missing IP. Set IP in a .env file (IP=...) or environment variable.')
-
-host = f"http://{ip}"
+host, ip = set_host_ip(__file__)
 
 
 """
