@@ -12,9 +12,8 @@ The REST interface is accessed using normal HTTP requests and JSON, in this exam
 import requests
 from slm_api.helpers.webxi_helper_functions import set_host_ip
 
-""""
-set_host_ip creates a .txt file in the project root where the slm_ip address lives. If the file already exists it reads the slm ip from the file.
-If the slm ip changes you need to manually update this file or delete to create a new
+"""
+set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
 host, ip = set_host_ip(__file__)
 
