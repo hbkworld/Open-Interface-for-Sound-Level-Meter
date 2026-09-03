@@ -1,5 +1,5 @@
 """
-18. Stream FastLAF (Sequence 115)
+15. Stream FastLAF
 -----------------------------------
 Streams the FastLAF (LAeq) broadband Leq value from sequence 115
 and pretty-prints each received value to the terminal.
