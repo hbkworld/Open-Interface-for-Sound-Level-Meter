@@ -111,7 +111,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    # or possible to use the webxiStreamhandlelr
-    # streamer = WebXiStreamHandler(host, ip, time = True) time = True is what enables the time stamps
+    # Alternatively, you can use WebXiStreamHandler (timestamps enabled with time=True)
+    # streamer = WebXiStreamHandler(host, ip, time=True)
     # streamer.startStream()
 
