@@ -4,7 +4,7 @@ This is helpful when wanting to avoid changes
 """
 
 import requests
-from HelpFunctions import webxi_helper_functions as webxi_helper
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
 
 host, ip = webxi_helper.set_host_ip(__file__)
 
