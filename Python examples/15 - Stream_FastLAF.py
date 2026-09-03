@@ -1,5 +1,5 @@
 """
-18. Stream FastLAF (Sequence 115)
+15. Stream FastLAF
 -----------------------------------
 Streams the FastLAF (LAeq) broadband Leq value from sequence 115
 and pretty-prints each received value to the terminal.
@@ -15,26 +15,10 @@ Sequence 115 properties:
   Unit:            dB re 20uPa
 """
 
-import asyncio
-import time
-import requests
-from datetime import datetime
-
-# Modules to convert webxi data
-import slm_api.webxi.webxi_stream as webxiStream
-
-# Reuse existing help functions
-import slm_api.helpers.stream_handler as stream
-import slm_api.helpers.measurment_handler as meas
-import slm_api.helpers.sequence_handler as seq
-import slm_api.helpers.websocket_handler as webSocket
+from slm_api.helpers import webxi_helper_functions as webxi_helper
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
-
-from slm_api.helpers.stream_handler import *
-from slm_api.helpers import webxi_helper_functions as webxi_helper 
-# enums
-from slm_api.enums.sequence_id_enum import SequenceIdEnums
 from slm_api.enums.fast_log_intervals_enum import FastLogInterval
+from slm_api.enums.sequence_id_enum import SequenceIdEnums
 
 # ---------- Configuration ---------- 
 host, ip = webxi_helper.set_host_ip(__file__)

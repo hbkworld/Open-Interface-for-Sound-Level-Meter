@@ -1,7 +1,6 @@
 import numpy as np
 import pyqtgraph as pg
 
-from timeit import default_timer as timer
 
 # Buffer and decoder for the mp3 stream
 from slm_api.helpers.buffer import DataBuffer
