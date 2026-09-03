@@ -45,7 +45,7 @@ def on_close(event):
     streamer.stopStream()
 
 if __name__ == "__main__":
-    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, leq_window_sec=10, time=True)
+    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, leq_window_sec=10)
     # Plot the streamer's own moving Leq, since it's the one being updated by incoming stream data
     fig = FigHandler(streamer.leq_mov)
     fig.startAnimation()
