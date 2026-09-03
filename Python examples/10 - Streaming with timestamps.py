@@ -27,7 +27,8 @@ import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measu
 import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
 from HelpFunctions.Leq import SLM_Setup_LAeq, MovingLeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from HelpFunctions import webxi_helper_functions as webxi_helper
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
+from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
 # Setup device 
 host, ip = webxi_helper.set_host_ip(__file__)
@@ -110,4 +111,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    # or possible to use the webxiStreamhandlelr
+    # streamer = WebXiStreamHandler(host, ip, time = True) time = True is what enables the time stamps
+    # streamer.startStream()
 
