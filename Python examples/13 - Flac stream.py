@@ -11,13 +11,15 @@ from slm_api.helpers.stream_handlers import WebXiStreamHandler
 import threading
 
 from HelpFunctions.FigureHandler import FigureHandler
+from slm_api.enums.sequence_id_enum import SequenceIdEnums
+
 
 
 # FLAC streaming is only available on 2255
 
 host, ip = webxi_helper.set_host_ip(__file__)
 
-sequenceID = 157
+sequenceID = SequenceIdEnums.FLACSignal.value
 
 
 class figureHandler(FigureHandler):

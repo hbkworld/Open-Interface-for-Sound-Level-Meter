@@ -12,9 +12,10 @@ from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
 from HelpFunctions.FigureHandler import FigureHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
+from slm_api.enums.sequence_id_enum import SequenceIdEnums
 
 host, ip = webxi_helper.set_host_ip(__file__)
-sequenceID = 156
+sequenceID = SequenceIdEnums.MP3Signal.value
 
 
 class figureHandler(FigureHandler):
