@@ -12,6 +12,8 @@ import threading
 
 from HelpFunctions.FigureHandler import FigureHandler
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
+from slm_api.helpers.data_handler import DataHandler
+
 
 
 
@@ -20,6 +22,7 @@ from slm_api.enums.sequence_id_enum import SequenceIdEnums
 host, ip = webxi_helper.set_host_ip(__file__)
 
 sequenceID = SequenceIdEnums.FLACSignal.value
+
 
 
 class figureHandler(FigureHandler):

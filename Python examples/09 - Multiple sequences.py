@@ -21,11 +21,19 @@ from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq # Class to hold moving L
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
+from slm_api.helpers.data_handler import DataHandler
+from slm_api.helpers.stream_handler import delete_stream
+from slm_api.helpers.measurment_handler import stop_measurement
 
 host, ip = webxi_helper.set_host_ip(__file__)
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add them to this list
 sequenceNames = ["LAeq", "LCeq"]
+
+class PrintHandler(DataHandler):
+    def handle(self, *, timestamp, name, value, moving_avg):
+        print(f"{timestamp}{name}: {value} and 10s test avg: {moving_avg:.2f}")
+
 
 if __name__ == "__main__":
     # turns off all BB freq weights to prevent interference
@@ -37,6 +45,13 @@ if __name__ == "__main__":
     # sets the sequences to true. You can add or remove sequences at the top of the file.
     webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
-    streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True)
-    streamer.startStream()
+    try:
+        streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True)
+        streamer.setDataHandler(PrintHandler())
+        streamer.startStream()
+    except KeyboardInterrupt:
+        stop_measurement(host)
+        delete_stream(host, streamer.streamName)
+        print("\nStream stopped by user.") 
+
  

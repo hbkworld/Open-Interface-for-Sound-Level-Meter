@@ -7,12 +7,18 @@ from matplotlib.animation import FuncAnimation
 
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
+from slm_api.helpers.data_handler import DataHandler
 
 host, ip = webxi_helper.set_host_ip(__file__)
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
 # Incase of error make sure the sequences are enabled on the SLM.
 sequenceNames = ["LAeq", "LCeq"]
+
+
+class PrintHandler(DataHandler):
+    def handle(self, *, timestamp, name, value, moving_avg):
+        print(f"{timestamp}{name}: {value} and 10s test avg: {moving_avg:.2f}")
 
 
 class FigHandler:  
@@ -63,6 +69,7 @@ if __name__ == "__main__":
     webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
     streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True)
+    streamer.setDataHandler(PrintHandler())
     fig = FigHandler(streamer.sequenceFuncs)
     fig.startAnimation()
     threading.Thread(target=streamer.startStream, daemon=True).start()        

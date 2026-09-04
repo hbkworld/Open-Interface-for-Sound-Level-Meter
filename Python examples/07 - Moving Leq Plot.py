@@ -7,11 +7,17 @@ import numpy as np
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers.webxi_helper_functions import set_host_ip
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
+from slm_api.helpers.data_handler import DataHandler
+from slm_api.helpers.stream_handler import delete_stream
 
 
 host, ip = set_host_ip(__file__)
 sequenceID = SequenceIdEnums.LAeq.value
 
+
+class PrintHandler(DataHandler):
+    def handle(self, timestamp, value, moving_avg):
+        print(timestamp + "LAeq: " + "%.1f" % value + "  |  LAeq,mov: " + "%.1f" % moving_avg)
 
 class FigHandler:  
    
@@ -46,6 +52,7 @@ def on_close(event):
 
 if __name__ == "__main__":
     streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, leq_window_sec=10)
+    streamer.setDataHandler(PrintHandler())
     # Plot the streamer's own moving Leq, since it's the one being updated by incoming stream data
     fig = FigHandler(streamer.leq_mov)
     fig.startAnimation()

@@ -6,12 +6,19 @@ from matplotlib.animation import FuncAnimation
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
+from slm_api.helpers.stream_handler import delete_stream
+from slm_api.helpers.data_handler import DataHandler
 
 
 host, ip = webxi_helper.set_host_ip(__file__)
 sequence_names = ["CPBLAeq"]
 
 sequenceID= SequenceIdEnums.CPBLAeq.value   
+
+class PrintHandler(DataHandler):
+    def handle(self, timestamp, values ):
+        print(f"{timestamp}{values}")
+
 
 
 class FigureHandler:
@@ -51,6 +58,7 @@ if __name__ == "__main__":
     webxi_helper.turn_on_cpb_leq(host, sequence_names)
 
     streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, cpb=True, sequenceNames=sequence_names)
+    streamer.setDataHandler(PrintHandler())
     fig = FigureHandler(streamer)
     threading.Thread(target=streamer.startStream, daemon=True).start()
     fig.startAnimation()
