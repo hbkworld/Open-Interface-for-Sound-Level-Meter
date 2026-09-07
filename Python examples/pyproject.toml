@@ -17,5 +17,6 @@ dependencies = [
     "PyQt5",
     "PyQt5-Qt5<5.15.11",
     "packaging",
-    "slm-open-api-package>=0.1.7",
+    "slm-open-api-package>=0.1.8",
+    "prettyprint>=0.1.5",
 ]
