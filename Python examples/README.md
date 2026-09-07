@@ -6,8 +6,8 @@ This README will guide you through the setup process as well as how to run the d
 2. See top folder README for more
 3. Add git to the environment variables
 4. A C++ compiler for building miniaudio (MP3/FLAC streams)
-5. First time setup, either create a file called slm_ip and the root of your project and input your slm ip inside. It's also possible to uv run one of the examples and you will be prompted to type your slm ip and slm_ip will be created at the same folder as your pyproject.toml file.
-    Add slm_ip to your .gitignore. If examples can't connect to your slm check the slm_ip file and see if it's the correct ip address.
+5. First-time setup: create a file named `slm_ip` in the root of your project and enter your SLM IP address inside it. Alternatively, run `uv run` on one of the examples; you will be prompted to enter your SLM IP, and `slm_ip` will then be created in the same folder as your `pyproject.toml` file.
+   Add `slm_ip` to your `.gitignore`. If the examples cannot connect to your SLM, check the `slm_ip` file and confirm that it contains the correct IP address.
 
 
 It is recommended to install VSCode, Sublime Text 3, or similar to run and edit the code. To not break any Python installation it is recommended to use either a docker or a Python virtual environment to run the test, see references.
