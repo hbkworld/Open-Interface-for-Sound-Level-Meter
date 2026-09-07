@@ -28,6 +28,7 @@ class PrintHandler(DataHandler):
 
 if __name__ == "__main__":
 
+    streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
         #   host, ip        - needed to connect to the device
@@ -44,9 +45,10 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         # Stop the measurement running on the device
         stop_measurement(host)
-        # Flush/close the CSV file so no buffered rows are lost and saves to file. 
-        # Only needed if saving the recording to a file
-        streamer.data_handler.close()
-        # Remove the stream resource from the device
-        delete_stream(host, streamer.streamName)
+        if streamer is not None:
+            # Flush/close the CSV file so no buffered rows are lost and saves to file. 
+            # Only needed if saving the recording to a file
+            streamer.data_handler.close()
+            # Remove the stream resource from the device
+            delete_stream(host, streamer.streamName)
         print("User exited the program")

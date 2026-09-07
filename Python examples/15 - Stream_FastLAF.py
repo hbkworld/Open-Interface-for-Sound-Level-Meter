@@ -57,6 +57,7 @@ class PrintHandler(DataHandler):
 
 
 if __name__ == "__main__":
+    streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
         # host, ip - needed to connect to the device
@@ -74,5 +75,6 @@ if __name__ == "__main__":
         # asyncio.run(main())
     except KeyboardInterrupt:
         stop_measurement(host)
-        delete_stream(host, streamer.streamName)
+        if streamer is not None:
+            delete_stream(host, streamer.streamName)
         print("\nStream stopped by user.") 

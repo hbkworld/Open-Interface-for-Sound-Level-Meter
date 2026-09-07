@@ -56,6 +56,7 @@ if __name__ == "__main__":
     # sets the sequences to true. You can add or remove sequences at the top of the file.
     webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
+    streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
         # host, ip - needed to connect to the device
@@ -71,8 +72,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         # stops the recording
         stop_measurement(host)
-        # deletes the stream from the device
-        delete_stream(host, streamer.streamName)
+        if streamer is not None:
+            # deletes the stream from the device
+            delete_stream(host, streamer.streamName)
         print("\nStream stopped by user.") 
 
  
