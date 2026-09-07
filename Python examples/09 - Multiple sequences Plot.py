@@ -9,6 +9,9 @@ from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.helpers.data_handler import DataHandler
 
+"""
+set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+"""
 host, ip = webxi_helper.set_host_ip(__file__)
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
@@ -17,6 +20,12 @@ sequenceNames = ["LAeq", "LCeq"]
 
 
 class PrintHandler(DataHandler):
+    """Handler to control what gets printed. It must subclass DataHandler and
+    implement a handle() method. If unsure what data is available, print data
+    itself to see it in the terminal, e.g.:
+    def handle(self, **data):
+    print(data)
+    """
     def handle(self, *, timestamp, name, value, moving_avg):
         print(f"{timestamp}{name}: {value} and 10s test avg: {moving_avg:.2f}")
 
@@ -56,7 +65,10 @@ class FigHandler:
         self.ani = FuncAnimation(self.fig, self._update, interval=1000)                     
 
 def on_close(event):
+    # handles what functions to call when closing the figure
     streamer.stopStream()
+    # writes the data to the saved format
+    streamer.data_handler.close()
 
 if __name__ == "__main__":
     # turns off all BB freq weights to prevent interference
@@ -68,7 +80,17 @@ if __name__ == "__main__":
     # sets the sequences to true. You can add or remove sequences at the top of the file.
     webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
-    streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True)
+    # WebXiStreamHandler takes several parameters to control what data is streamed:
+    # host, ip     - needed to connect to the device
+    # multi = True because we're streaming more than one sequence at once
+    # sequenceNames - names of the already-enabled sequences to look up and stream
+    # leq_window_sec - moving average window length in seconds for each sequence
+    #   (default 10 if not specified); alternatively use windowSize to set the raw sample count
+    # saving - "csv", "json", or "pickle"; the format to save data as
+    # saving_path  - the file path to save the data to. Remember to call streamer.data_handler.close() to save the data on closure. 
+    streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True, saving="json", saving_path="file path to save the data")
+    # To print incoming data, call setDataHandler() with an instance of your own
+    # DataHandler subclass (see the PrintHandler class above for an example). 
     streamer.setDataHandler(PrintHandler())
     fig = FigHandler(streamer.sequenceFuncs)
     fig.startAnimation()

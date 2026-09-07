@@ -10,12 +10,22 @@ from slm_api.enums.sequence_id_enum import SequenceIdEnums
 from slm_api.helpers.data_handler import DataHandler
 from slm_api.helpers.stream_handler import delete_stream
 
-
+"""
+set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+"""
 host, ip = set_host_ip(__file__)
+
+# Setup what sequence to stream on
 sequenceID = SequenceIdEnums.LAeq.value
 
 
 class PrintHandler(DataHandler):
+    """Handler to control what gets printed. It must subclass DataHandler and
+        implement a handle() method. If unsure what data is available, print data
+        itself to see it in the terminal, e.g.:
+            def handle(self, **data):
+                print(data)
+    """
     def handle(self, timestamp, value, moving_avg):
         print(timestamp + "LAeq: " + "%.1f" % value + "  |  LAeq,mov: " + "%.1f" % moving_avg)
 
@@ -51,11 +61,18 @@ def on_close(event):
     streamer.stopStream()
 
 if __name__ == "__main__":
+    # WebXiStreamHandler takes several parameters to control what data is streamed:
+    # host, ip     - needed to connect to the device
+    # sequenceID   - an enum selecting which sequence to listen on
+    # leq_window_sec sets the moving average window length in seconds, default is 10 if not specified
     streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, leq_window_sec=10)
+    # To print incoming data, call setDataHandler() with an instance of your own
+    # DataHandler subclass (see the PrintHandler class above for an example).
     streamer.setDataHandler(PrintHandler())
     # Plot the streamer's own moving Leq, since it's the one being updated by incoming stream data
     fig = FigHandler(streamer.leq_mov)
     fig.startAnimation()
+    # Starts the stream in another thread to not conflict with the figurehandler
     threading.Thread(target=streamer.startStream, daemon=True).start()        
     plt.show()
     

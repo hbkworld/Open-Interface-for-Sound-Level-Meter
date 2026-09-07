@@ -30,8 +30,11 @@ import HelpFunctions.websocket_handler as webSocket     # Async functions to con
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
-# Setup device 
+"""
+set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+"""
 host, ip = webxi_helper.set_host_ip(__file__)
+
 socket.gethostbyname(socket.gethostname())
 
 # Setup streaming info. Here we will stream an LAeq stream with timestamps.
