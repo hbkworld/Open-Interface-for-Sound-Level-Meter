@@ -113,4 +113,8 @@ async def main():
     await webSocket.next_async_websocket(uri, msg_func)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        meas.stop_measurement(host)
+        stream.delete_stream(host, "MultipleSequences")
