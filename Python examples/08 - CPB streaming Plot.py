@@ -6,7 +6,6 @@ from matplotlib.animation import FuncAnimation
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
-from slm_api.helpers.stream_handler import delete_stream
 from slm_api.helpers.data_handler import DataHandler
 
 

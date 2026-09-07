@@ -12,7 +12,6 @@ import threading
 
 from HelpFunctions.FigureHandler import FigureHandler
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
-from slm_api.helpers.data_handler import DataHandler
 
 
 
