@@ -8,11 +8,17 @@ from matplotlib.animation import FuncAnimation
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.helpers.data_handler import DataHandler
+import datetime
+
 
 """
 set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
 host, ip = webxi_helper.set_host_ip(__file__)
+
+# Used to create file with a custom name and attach the current date and time to it.
+filename = f'name-of-file_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
+
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
 # Incase of error make sure the sequences are enabled on the SLM.
@@ -88,7 +94,10 @@ if __name__ == "__main__":
     #   (default 10 if not specified); alternatively use windowSize to set the raw sample count
     # saving - "csv", "json", or "pickle"; the format to save data as
     # saving_path  - the file path to save the data to. Remember to call streamer.data_handler.close() to save the data on closure. 
-    streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True, saving="json", saving_path="file path to save the data")
+    # This example saves to a "saved_data" folder relative to the current working directory,
+    # named after the current time and date. The folder is created below since it must
+    # to change the filename edit the variable filename at the top of this file
+    streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True, saving="json", saving_path=f"./saved_data/{filename}")
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example). 
     streamer.setDataHandler(PrintHandler())

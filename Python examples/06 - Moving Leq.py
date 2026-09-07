@@ -4,6 +4,7 @@ from slm_api.enums.sequence_id_enum import SequenceIdEnums
 from slm_api.helpers.stream_handler import delete_stream
 from slm_api.helpers.measurment_handler import stop_measurement
 from slm_api.helpers.data_handler import DataHandler
+import datetime
 
 
 
@@ -11,6 +12,10 @@ from slm_api.helpers.data_handler import DataHandler
 set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
 host, ip = webxi_helper.set_host_ip(__file__)
+
+# Used to create file with a custom name and attach the current date and time to it.
+filename = f'name-of-file_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
+
 
 # Setup what sequence to stream on
 sequenceId = SequenceIdEnums.LAeq.value
@@ -36,7 +41,7 @@ if __name__ == "__main__":
         #   leq_window_sec  - moving average window length in seconds (default 10 if not specified)
         #   saving          - "csv", "json", or "pickle"; the format to save data as
         #   saving_path     - the file path to save the data to
-        streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceId, saving="csv", saving_path="file path to save the data")
+        streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceId, saving="csv", saving_path=f"./saved_data/{filename}")
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())
