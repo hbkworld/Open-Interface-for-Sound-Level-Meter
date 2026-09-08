@@ -51,7 +51,7 @@ class FigHandler:
     def startAnimation(self):
         # interval controls how often the plot polls for a new image, not how
         # often the device actually sends one
-        self.ani = FuncAnimation(self.fig, self._update, interval=500)
+        self.ani = FuncAnimation(self.fig, self._update, interval=100)
 
 
 def on_close(event):
