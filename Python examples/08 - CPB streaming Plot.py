@@ -30,8 +30,8 @@ class PrintHandler(DataHandler):
         def handle(self, **data):
             print(data)
     """
-    def handle(self, timestamp, values ):
-        print(f"{timestamp}{values}")
+    def handle(self, values, **data):
+        print(f"{values}")
 
 
 

@@ -51,8 +51,8 @@ class PrintHandler(DataHandler):
         def handle(self, **data):
             print(data)
     """
-    def handle(self, timestamp, name, local, value, unit):
-        print(f"{timestamp}{name} ({local}):  {value:7.2f} {unit}")
+    def handle(self, name, local, value, unit, **data):
+        print(f"{name} ({local}):  {value:7.2f} {unit}")
 
 
 
