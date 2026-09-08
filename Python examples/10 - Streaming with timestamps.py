@@ -3,32 +3,24 @@
 # as the timestamps come from a stream itself.
 
 import asyncio 
-import requests
-import threading
-import sys, traceback
 import time
 import socket
-from datetime import datetime
+from datetime import datetime, timezone
 
 import HelpFunctions.sequence_handler as seq
-from HelpFunctions.Leq import MovingLeq, SLM_Setup_LAeq 
 
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 import numpy as np
 
 # Modules to convert webxi data
-import webxi.webxi_header as webxiHead
 import webxi.webxi_stream as webxiStream
 # Help functions located in HelpFunction folder
 # Read these files to get examples on how to communicate with the SLM
 import HelpFunctions.stream_handler as stream           # SLM stream functions
 import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
 import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
-from HelpFunctions.Leq import SLM_Setup_LAeq, MovingLeq # Class to hold moving Leq 
+from HelpFunctions.Leq import MovingLeq # Class to hold moving Leq 
 import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
-from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
 """
 set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
@@ -52,12 +44,11 @@ class timeStamps:
             self.__startTime = Value + adder
     @property    
     def lastTime(self):
-        return datetime.utcfromtimestamp(self.__timeBuffer[-1]).strftime('%H:%M:%S')
+        return datetime.fromtimestamp(self.__timeBuffer[-1], tz=timezone.utc).strftime('%H:%M:%S')
 
     def __init__(self, bufferSize) -> None:
         self.__startTime = None
         self.__timeBuffer = np.zeros(bufferSize)
-        print("Hej")
 
     def move(self, NewValue):
         NewValue = NewValue + self.StartTime
