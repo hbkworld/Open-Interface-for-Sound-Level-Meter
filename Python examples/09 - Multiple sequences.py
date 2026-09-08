@@ -23,8 +23,8 @@ class PrintHandler(DataHandler):
     def handle(self, **data):
     print(data)
     """
-    def handle(self, *, timestamp, name, value, moving_avg):
-        print(f"{timestamp}{name}: {value} and 10s test avg: {moving_avg:.2f}")
+    def handle(self, *, name, value, **data):
+        print(f"{name}: {value}")
 
 
 if __name__ == "__main__":

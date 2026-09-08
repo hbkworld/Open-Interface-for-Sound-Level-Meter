@@ -32,31 +32,26 @@ class PrintHandler(DataHandler):
     def handle(self, **data):
     print(data)
     """
-    def handle(self, *, timestamp, name, value, moving_avg):
-        print(f"{timestamp}{name}: {value} and 10s test avg: {moving_avg:.2f}")
+    def handle(self, *, name, value, **data):
+        print(f"{name}: {value}")
 
 
 class FigHandler:  
    
     def __init__(self, dataHandler):
-        self.fig, self.ax = plt.subplots(2,1,sharex=True, sharey=True)
+        self.fig, self.ax = plt.subplots(1,1)
         axis = np.arange(-(len(dataHandler[0].getPlotData(True)) - 1),1,1)
         self.dataHandler = dataHandler if isinstance(dataHandler, list) else [dataHandler]
-        self.ln1 = []
-        self.ln2 = []
+        self.ln = []
         for x, ii in zip(self.dataHandler, sequenceNames):
-            self.ln1.append((self.ax[0].plot(axis,x.getPlotData(True), label=ii))[0])
-            self.ln2.append((self.ax[1].plot(axis,x.getPlotData(False)))[0])
-        self.ax[1].set_xlim(left=np.min(axis), right=np.max(axis))
-        self.ax[1].set_ylim(bottom=30, top=100)
-        self.ax[0].set_ylabel("dB [SPL]")
-        self.ax[1].set_xlabel("Time [s]")
-        self.ax[1].set_ylabel("dB [SPL]")
-        self.ax[0].set_title('Moving avaraged')
-        self.ax[1].set_title('Instantaneous')
-        leg = self.ax[0].legend(loc='upper left')
-        self.ax[0].grid()
-        self.ax[1].grid()
+            self.ln.append((self.ax.plot(axis,x.getPlotData(False), label=ii))[0])
+        self.ax.set_xlim(left=np.min(axis), right=np.max(axis))
+        self.ax.set_ylim(bottom=30, top=100)
+        self.ax.set_xlabel("Time [s]")
+        self.ax.set_ylabel("dB [SPL]")
+        self.ax.set_title('Instantaneous')
+        # leg = self.ax.legend(loc='upper left')
+        self.ax.grid()
         self.fig.autofmt_xdate()
         self.fig.tight_layout()
         self.fig.canvas.mpl_connect('close_event', on_close)
@@ -64,8 +59,7 @@ class FigHandler:
 
     def _update(self, i): 
         for idx, x in enumerate(self.dataHandler):
-            self.ln1[idx].set_ydata(x.getPlotData(True))
-            self.ln2[idx].set_ydata(x.getPlotData(False))
+            self.ln[idx].set_ydata(x.getPlotData(False))
 
     def startAnimation(self):
         self.ani = FuncAnimation(self.fig, self._update, interval=1000)                     

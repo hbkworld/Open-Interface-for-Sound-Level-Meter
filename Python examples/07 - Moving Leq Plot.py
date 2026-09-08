@@ -16,6 +16,7 @@ host, ip = set_host_ip(__file__)
 
 # Setup what sequence to stream on
 sequenceID = SequenceIdEnums.LAeq.value
+sequenceName = SequenceIdEnums.LAeq.name
 
 
 class PrintHandler(DataHandler):
@@ -25,36 +26,36 @@ class PrintHandler(DataHandler):
             def handle(self, **data):
                 print(data)
     """
-    def handle(self, timestamp, value, moving_avg):
-        print(timestamp + "LAeq: " + "%.1f" % value + "  |  LAeq,mov: " + "%.1f" % moving_avg)
+    def handle(self, value, **data):
+        print(f"{sequenceName}: " + "%.1f" % value)
 
 class FigHandler:  
    
     def __init__(self, dataHandler):
-        self.fig = plt.figure()
-        self.ax = self.fig.subplots(2,1,sharex=True, sharey=True)
-        axis = np.arange(-(len(dataHandler.getPlotData(True)) - 1),1,1)
-        self.dataHandler = dataHandler
-        self.ln1, = self.ax[0].plot(axis,dataHandler.getPlotData(True))
-        self.ln2, = self.ax[1].plot(axis,dataHandler.getPlotData(False))
-        self.ax[1].set_xlim(left=np.min(axis), right=np.max(axis))
-        self.ax[1].set_ylim(bottom=30, top=100)
-        self.ax[0].set_ylabel("dB [SPL]")
-        self.ax[1].set_xlabel("Time [s]")
-        self.ax[1].set_ylabel("dB [SPL]")
-        self.ax[0].set_title('Moving avaraged LAeq')
-        self.ax[1].set_title('Instantaneous LAeq')
-        self.ax[0].grid()
-        self.ax[1].grid()
+        self.fig, self.ax = plt.subplots(1,1)
+        self.dataHandler = dataHandler if isinstance(dataHandler, list) else [dataHandler]
+        axis = np.arange(-(len(self.dataHandler[0].getPlotData(True)) - 1),1,1)
+        self.ln = []
+        for x in self.dataHandler:
+            self.ln.append((self.ax.plot(axis,x.getPlotData(False), label=sequenceName))[0])
+        self.ax.set_xlim(left=np.min(axis), right=np.max(axis))
+        self.ax.set_ylim(bottom=30, top=100)
+        self.ax.set_xlabel("Time [s]")
+        self.ax.set_ylabel("dB [SPL]")
+        self.ax.set_title('Instantaneous')
+        # leg = self.ax.legend(loc='upper left')
+        self.ax.grid()
+        self.fig.autofmt_xdate()
+        self.fig.tight_layout()
         self.fig.canvas.mpl_connect('close_event', on_close)
-        self.fig.canvas.manager.set_window_title('LAeq example') 
+        self.fig.canvas.setWindowTitle(f'{sequenceName} example') 
 
     def _update(self, i): 
-        self.ln1.set_ydata(self.dataHandler.getPlotData(True))
-        self.ln2.set_ydata(self.dataHandler.getPlotData(False))
+        for idx, x in enumerate(self.dataHandler):
+            self.ln[idx].set_ydata(x.getPlotData(False))
 
     def startAnimation(self):
-        self.ani = FuncAnimation(self.fig, self._update, interval=1000)                     
+        self.ani = FuncAnimation(self.fig, self._update, interval=1000)                      
 
 def on_close(event):
     streamer.stopStream()

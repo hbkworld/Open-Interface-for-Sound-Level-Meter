@@ -27,8 +27,8 @@ class PrintHandler(DataHandler):
         def handle(self, **data):
             print(data)
     """
-    def handle(self, timestamp, value, moving_avg, **data):
-        print(timestamp + "LAeq: " + "%.1f" % value + "  |  LAeq,mov: " + "%.1f" % moving_avg)
+    def handle(self, value, **data):
+        print("LAeq: " + "%.1f" % value)
 
 
 if __name__ == "__main__":
