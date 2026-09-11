@@ -14,7 +14,6 @@ set_host_ip creates/reads the `slm_ip` file in the project root. If the IP chang
 """
 host, ip = webxi_helper.set_host_ip(__file__)
 
-# Weight name used to enable the CPB measurement on the device (builds endpoint CPB{weight})
 # Full sequence name used to look up the CPB sequence via WebXiStreamHandler
 # (only sequenceNames[0] is used for cpb=True)
 sequence_names = ["CPBLAeq"]
