@@ -4,6 +4,8 @@ from slm_api.enums.sequence_id_enum import SequenceIdEnums
 from slm_api.helpers.stream_handler import delete_stream
 from slm_api.helpers.measurment_handler import stop_measurement
 from slm_api.helpers.data_handler import DataHandler
+from slm_api.helpers.https_requests import UseHttps
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
 import datetime
 
 
@@ -13,12 +15,18 @@ set_host_ip creates/reads the `slm_ip` file in the project root. If the IP chang
 """
 host, ip = webxi_helper.set_host_ip(__file__)
 
+# By default https is enabled
+# If https is not needed the line below this shows how to disble it for all request calls
+UseHttps(use_https=False)
+
+
 # Used to create file with a custom name and attach the current date and time to it.
 filename = f'name-of-file_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
 
 
 # Setup what sequence to stream on
 sequenceId = SequenceIdEnums.LAeq.value
+sequenceName = SequenceIdEnums.LAeq.name
 
 class PrintHandler(DataHandler):
     """Handler to control what gets printed. It must subclass DataHandler and
@@ -28,10 +36,20 @@ class PrintHandler(DataHandler):
             print(data)
     """
     def handle(self, value, **data):
-        print("LAeq: " + "%.1f" % value)
+        print(f"{sequenceName}: " + "%.1f" % value)
+
+
 
 
 if __name__ == "__main__":
+    # turns off all BB freq weights to prevent interference
+    webxi_helper.turn_off_bb_freq_weight(host)
+
+    # turns on the wanted BB freq weights for this example
+    webxi_helper.turn_on_bb_freq_weight(host, ['A'])
+
+    # sets the sequences to true.
+    webxi_helper.turn_on_bb_leq(host, ['LAeq'])
 
     streamer = None
     try:
