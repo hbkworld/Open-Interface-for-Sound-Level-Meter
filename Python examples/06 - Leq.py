@@ -16,7 +16,7 @@ set_host_ip creates/reads the `slm_ip` file in the project root. If the IP chang
 host, ip = webxi_helper.set_host_ip(__file__)
 
 # By default https is enabled
-# If https is not needed the line below this shows how to disble it for all request calls
+# If https is not needed the line below this shows how to disable it for all request calls
 UseHttps(use_https=False)
 
 
