@@ -10,6 +10,9 @@ from slm_api.helpers.fft import dBfft
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 import threading
 
+from slm_api.helpers.https_requests import put
+
+
 from HelpFunctions.FigureHandler import FigureHandler
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
 
@@ -67,6 +70,9 @@ def on_close():
     streamer.stopStream()
 
 if __name__ == "__main__":
+    # Make sure flac streaming is enabled
+    put(host, "/WebXi/Applications/SLM/Setup/AudioRecordingAnalysisQuality", json=1)
+
     # WebXiStreamHandler takes several parameters to control what data is streamed:
     # host, ip - needed to connect to the device
     # flac=True to enable flac streaming

@@ -8,6 +8,8 @@ from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers.webxi_helper_functions import set_host_ip
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
 from slm_api.helpers.data_handler import DataHandler
+from slm_api.helpers import webxi_helper_functions as webxi_helper 
+
 
 """
 set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
@@ -61,11 +63,20 @@ def on_close(event):
     streamer.stopStream()
 
 if __name__ == "__main__":
+    # turns off all BB freq weights to prevent interference
+    webxi_helper.turn_off_bb_freq_weight(host)
+    
+    # turns on the wanted BB freq weights for this example
+    webxi_helper.turn_on_bb_freq_weight(host, ['A'])
+    
+    # sets the sequences to true.
+    webxi_helper.turn_on_bb_leq(host, ['LAeq'])
+
     # WebXiStreamHandler takes several parameters to control what data is streamed:
     # host, ip     - needed to connect to the device
     # sequenceID   - an enum selecting which sequence to listen on
     # leq_window_sec sets the moving average window length in seconds, default is 10 if not specified
-    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, leq_window_sec=10)
+    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID)
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example).
     streamer.setDataHandler(PrintHandler())

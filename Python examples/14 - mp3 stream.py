@@ -9,6 +9,9 @@ import threading
 
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
+from slm_api.helpers.https_requests import put
+
+
 from HelpFunctions.FigureHandler import FigureHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
@@ -64,6 +67,9 @@ def on_close():
 
 
 if __name__ == "__main__":
+    # Make sure mp3 streaming is enabled
+    put(host, "/WebXi/Applications/SLM/Setup/AudioRecordingAnalysisQuality", json=1)
+
     # WebXiStreamHandler takes several parameters to control what data is streamed:
     # host, ip - needed to connect to the device
     # sequenceID - an enum selecting which sequence to listen on

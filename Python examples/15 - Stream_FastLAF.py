@@ -57,6 +57,17 @@ class PrintHandler(DataHandler):
 
 
 if __name__ == "__main__":
+
+    # turns off all BB freq weights to prevent interference
+    webxi_helper.turn_off_bb_freq_weight(host)
+
+    # turns on the wanted BB freq weights for this example
+    webxi_helper.turn_on_bb_freq_weight(host, ["A"])
+
+    # sets the sequences to true. 
+    # For fastlogging add fast=True so it routes to the correct endpoint
+    webxi_helper.turn_on_bb_leq(host, 'LAF', fast=True)
+
     streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
