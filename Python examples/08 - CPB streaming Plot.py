@@ -14,11 +14,10 @@ set_host_ip creates/reads the `slm_ip` file in the project root. If the IP chang
 """
 host, ip = webxi_helper.set_host_ip(__file__)
 
-# Weight name used to enable the CPB measurement on the device (builds endpoint CPB{weight})
-sequence_names = ["LAeq"]
 # Full sequence name used to look up the CPB sequence via WebXiStreamHandler
 # (only sequenceNames[0] is used for cpb=True)
-cpb_sequence_names = ["CPBLAeq"]
+sequence_names = ["CPBLAeq"]
+
 
 # Setup what sequence to stream on
 sequenceID= SequenceIdEnums.CPBLAeq.value   
@@ -76,7 +75,7 @@ if __name__ == "__main__":
     # sequenceID - an enum selecting which sequence to listen on
     # cpb=True is used to listen on cpb
     # Full sequence name used to look up the CPB sequence via WebXiStreamHandler
-    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, cpb=True, sequenceNames=cpb_sequence_names)
+    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, cpb=True, sequenceNames=sequence_names)
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example).    
     streamer.setDataHandler(PrintHandler())
