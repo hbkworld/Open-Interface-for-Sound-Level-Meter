@@ -5,6 +5,8 @@
 
 import requests
 from slm_api.helpers.webxi_helper_functions import set_host_ip
+from slm_api.helpers.https_requests import get, put
+
 
 """
 set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
@@ -14,16 +16,16 @@ host, ip = set_host_ip(__file__)
 """
 The "SLM" node under /webxi/applications contains everything related to Sound Level Meter functionallity.
 """
-response = requests.get(host + "/webxi/applications/slm")
+response = get(host , "/webxi/applications/slm")
 print(response.text)
 
 """
 Below we will use description from the metadata to find out what each of them does
 """
-response = requests.get(host + "/webxi/applications/slm")
+response = get(host , "/webxi/applications/slm")
 nodes = response.json()
 for subnode in nodes:
-    metadata = requests.get(host + "/webxi/applications/slm/" + subnode + "?metadata")
+    metadata = get(host , "/webxi/applications/slm/" + subnode + "?metadata")
     print("/" + subnode)
     description = metadata.json()["Metadata"].get("Description", "") #We use .get instead because description might not exist
     print("  Description: " + description)
