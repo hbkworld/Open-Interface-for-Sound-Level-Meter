@@ -69,5 +69,4 @@ if __name__ == "__main__":
     # Starts the stream in another thread to not conflict with the figurehandler
     threading.Thread(target=streamer.startStream, daemon=True).start()
     plt.show()
-    # removes the stream from the device once the figure is closed
-    stream.delete_stream(host, streamer.streamName)
+    
