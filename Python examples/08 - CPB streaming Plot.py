@@ -29,8 +29,8 @@ class PrintHandler(DataHandler):
         def handle(self, **data):
             print(data)
     """
-    def handle(self, values, **data):
-        print(f"{values}")
+    def handle(self, value, **data):
+        print(f"{value}")
 
 
 
