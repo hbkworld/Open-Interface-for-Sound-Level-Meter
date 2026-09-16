@@ -1,6 +1,6 @@
 """
 17 - multi device streaming with CPB or BB
-This example shows how to setup multiple devices to stream a CPB or BB frequence at the same time
+This example shows how to set up multiple devices to stream a CPB or BB frequency at the same time
 
 """
 
@@ -79,7 +79,8 @@ if __name__ == "__main__":
         # Stops all the streams at the same time 
         stop_all(streams)
 
-        # important to call the data_handler.close() to initiate the writing to file on close
-        # s.data_handler.close()
+        # Important: close every data handler to flush each device's file.
+         # for s in streams:
+         #     s.data_handler.close()
 
         print("\nStreams stopped by user.")
