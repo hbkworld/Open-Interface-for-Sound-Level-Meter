@@ -80,7 +80,7 @@ if __name__ == "__main__":
         stop_all(streams)
 
         # Important: close every data handler to flush each device's file.
-         # for s in streams:
-         #     s.data_handler.close()
+        # for s in streams:
+        #     s.data_handler.close()
 
         print("\nStreams stopped by user.")
