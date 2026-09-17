@@ -6,13 +6,15 @@ This README will guide you through the setup process as well as how to run the d
 2. See top folder README for more
 3. Add git to the environment variables
 4. A C++ compiler for building miniaudio (MP3/FLAC streams)
-5. First-time setup: create a file named `slm_ip` in the root of your project and enter your SLM IP address inside it. Alternatively, run `uv run` on one of the examples; you will be prompted to enter your SLM IP, and `slm_ip` will then be created in the same folder as your `pyproject.toml` file.
-   Add `slm_ip` to your `.gitignore`. If the examples cannot connect to your SLM, check the `slm_ip` file and confirm that it contains the correct IP address.
+5. First time you run an example you will be prompted to enter the ip of your slm. After the ip has been input a file called slm ip will be created at the root of the project with the slm ip inside. if you need to use another slm or your slm ip changes change the ip inside this file to the new one. If the examples cannot connect to your SLM, check the slm_ip file and confirm that it contains the correct IP address.
 
-
-It is recommended to install VSCode, Sublime Text 3, or similar to run and edit the code. To not break any Python installation it is recommended to use either a docker or a Python virtual environment to run the test, see references.
+It is recommended to install VSCode, Sublime Text 3, or similar to run and edit the code. To not break any Python installation it is recommended to use a virtual environment to avoid modifying your system Python.
 
 ## Setup and how to run an example
+
+It is recommended to use uv to run the examples
+
+Uv can be downloaded from: https://docs.astral.sh/uv/getting-started/installation/
 
 ### If you're using uv
 
@@ -44,7 +46,6 @@ Mac and Linux
 python -m venv .venv
 source .venv\bin\activate
 ```
-On macOS and Linux the second command is `source .venv/bin/activate` instead. Once active, the environment name is shown in the terminal prompt. Use `deactivate` to leave it again.
 
 To run the given examples must different Python modules be installed. To do this run the following two commands in a given terminal
 ```
