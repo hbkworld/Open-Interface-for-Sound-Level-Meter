@@ -15,6 +15,8 @@ from slm_api.helpers.https_requests import put
 from HelpFunctions.FigureHandler import FigureHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
+from slm_api.helpers.measurment_handler import stop_measurement
+
 
 """
 set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
@@ -63,6 +65,7 @@ class figureHandler(FigureHandler):
 
 
 def on_close():
+    stop_measurement(host)
     streamer.stopStream()
 
 

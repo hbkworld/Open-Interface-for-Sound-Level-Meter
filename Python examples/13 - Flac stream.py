@@ -5,6 +5,8 @@ from slm_api.helpers import webxi_helper_functions as webxi_helper
 # Buffer and decoder for the flac stream
 from slm_api.helpers.buffer import DataBuffer
 from slm_api.helpers.fft import dBfft
+from slm_api.helpers.measurment_handler import stop_measurement
+
 
 
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
@@ -67,6 +69,7 @@ class figureHandler(FigureHandler):
         self.i += 1
 
 def on_close():
+    stop_measurement(host)
     streamer.stopStream()
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ class FigHandler:
         for x in self.dataHandler:
             self.ln.append((self.ax.plot(axis,x.getPlotData(False), label=sequenceName))[0])
         self.ax.set_xlim(left=np.min(axis), right=np.max(axis))
-        self.ax.set_ylim(bottom=30, top=100)
+        self.ax.set_ylim(bottom=00, top=100)
         self.ax.set_xlabel("Time [s]")
         self.ax.set_ylabel("dB [SPL]")
         self.ax.set_title('Instantaneous')
