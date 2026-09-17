@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # This example uses multiple slm's so multiple ips is also needed
     # Insert the ips of your devices inside the devices list
     devices = [
-        ("http://192.168.0.110", "192.168.0.110"),
+        ("http://192.168.1.183", "192.168.1.183"),
         ("http://192.168.0.78", "192.168.0.78"),
     ]
 
@@ -54,13 +54,13 @@ if __name__ == "__main__":
     streams = []
     for dev_host, dev_ip in devices:
         # if the data is to be saved uncomment the line under this. This will save the data from each device in its own file
-        # filename = f'{dev_ip}_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
+        filename = f'{dev_ip}_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
         streams.append(
             WebXiStreamHandler(
                 host=dev_host, ip=dev_ip, sequenceID=SEQUENCE_ID,
                 streamName=f"Stream_{dev_ip}", multi_device=True, cpb=True,
                 # example how to save the data, saving support, "csv","json", "pickle". Important to call the close function, look at the end of the file
-                # saving="json", saving_path=f"./saved_data/{filename}"
+                saving="json", saving_path=f"./saved_data/{filename}"
             )
         )
     # Sets a printhandler for all the streams if printing the data is needed
@@ -80,7 +80,6 @@ if __name__ == "__main__":
         stop_all(streams)
 
         # Important: close every data handler to flush each device's file.
-        # for s in streams:
-        #     s.data_handler.close()
-
+        for s in streams:
+            s.data_handler.close()
         print("\nStreams stopped by user.")
