@@ -29,8 +29,8 @@ class PrintHandler(DataHandler):
         def handle(self, **data):
             print(data)
     """
-    def handle(self, values, **data):
-        print(f"{values}")
+    def handle(self, value, **data):
+        print(f"{value}")
 
 
 
@@ -42,7 +42,7 @@ class FigureHandler:
         self.CPBFreq = dataHandler.calcFreqBands()
         self.freq = [(i.replace("000.0","k")).replace(".0", "") for i in [str(i) for i in self.CPBFreq]]
         self.ln = self.ax.bar(self.freq, np.zeros(len(self.freq)), width=.99)
-        self.ax.set_ylim(bottom=-20, top=120)
+        self.ax.set_ylim(bottom=-00, top=120)
         self.ax.grid(axis='y')
         self.ax.set_ylabel("dB [SPL]")
         self.ax.set_xlabel("Frequency band [Hz]")
