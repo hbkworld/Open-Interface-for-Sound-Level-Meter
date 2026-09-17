@@ -934,7 +934,7 @@ requires-dist = [
     { name = "pyqtgraph" },
     { name = "python-dotenv" },
     { name = "requests" },
-    { name = "slm-open-api-package", specifier = ">=0.2.5" },
+    { name = "slm-open-api-package", specifier = "==0.2.5" },
     { name = "websockets" },
 ]
 
