@@ -60,8 +60,8 @@ def on_close(event):
 if __name__ == "__main__":
     # WebXiStreamHandler takes several parameters to control what data is streamed:
     # host           - needed to connect to the device
-    # screen_record  - streams the ScreenImage sequence instead of audio/Leq data
-    streamer = WebXiStreamHandler(host, screen_record=True)
+    # Use mode= to select the stream type. This example uses screen_record mode.    
+    streamer = WebXiStreamHandler(host, mode="screen_record")
     fig = FigHandler(streamer)
     fig.startAnimation()
     # Starts the stream in another thread to not conflict with the figurehandler

@@ -73,10 +73,10 @@ if __name__ == "__main__":
         # WebXiStreamHandler takes several parameters to control what data is streamed:
         # host - needed to connect to the device
         # sequenceID - an enum selecting which sequence to listen on
-        # fast_logging = True to enable fast logging
+        # Use mode= to select the stream type. This example uses fast_logging mode.    
         # fast_logging_interval - FastLogInterval enum index (0-10), not milliseconds directly;
-        #   if omitted, the device's currently configured interval is read instead
-        streamer = WebXiStreamHandler(host, sequenceID = SEQUENCE_ID, fast_logging=True, fast_logging_interval=FAST_LOGGING_INTERVAL)
+        # if omitted, the device's currently configured interval is read instead
+        streamer = WebXiStreamHandler(host, sequenceID = SEQUENCE_ID, mode="fast_logging", fast_logging_interval=FAST_LOGGING_INTERVAL)
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())

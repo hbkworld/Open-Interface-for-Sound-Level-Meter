@@ -76,8 +76,8 @@ if __name__ == "__main__":
     # WebXiStreamHandler takes several parameters to control what data is streamed:
     # host - needed to connect to the device
     # sequenceID - an enum selecting which sequence to listen on
-    # mp3 = True to enable mp3 streaming
-    streamer = WebXiStreamHandler(host, mp3=True, sequenceID=sequenceID)
+    # Use mode= to select the stream type. This example uses mp3 mode.    
+    streamer = WebXiStreamHandler(host, mode="mp3", sequenceID=sequenceID)
     fig = figureHandler()
     fig.app.aboutToQuit.connect(on_close)
     threading.Thread(target=streamer.startStream, daemon=True).start()

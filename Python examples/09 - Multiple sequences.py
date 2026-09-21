@@ -41,11 +41,11 @@ if __name__ == "__main__":
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
         # host          - needed to connect to the device
-        # multi = True because we're streaming more than one sequence at once
+        # Use mode= to select the stream type. This example uses multi mode.    
         # sequenceNames - names of the already-enabled sequences to look up and stream
         # leq_window_sec - moving average window length in seconds for each sequence
         #   (default 10 if not specified); alternatively use windowSize to set the raw sample count
-        streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, multi=True)
+        streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, mode="multi")
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())

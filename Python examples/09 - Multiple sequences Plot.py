@@ -81,17 +81,17 @@ if __name__ == "__main__":
     webxi_helper.turn_on_bb_leq(host, sequenceNames)
 
     # WebXiStreamHandler takes several parameters to control what data is streamed:
-    # host          - needed to connect to the device
-    # multi = True because we're streaming more than one sequence at once
-    # sequenceNames - names of the already-enabled sequences to look up and stream
+    # host           - needed to connect to the device
+    # Use mode= to select the stream type. This example uses multi mode.    
+    # sequenceNames  - names of the already-enabled sequences to look up and stream
     # leq_window_sec - moving average window length in seconds for each sequence
     #   (default 10 if not specified); alternatively use windowSize to set the raw sample count
     # saving - "csv", "json", or "pickle"; the format to save data as
-    # saving_path  - the file path to save the data to. Remember to call streamer.data_handler.close() to save the data on closure. 
+    # saving_path    - the file path to save the data to. Remember to call streamer.data_handler.close() to save the data on closure. 
     # This example saves to a "saved_data" folder relative to the current working directory,
     # named after the current time and date. The folder is created below since it must
     # to change the filename edit the variable filename at the top of this file
-    streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, multi=True, saving="json", saving_path=f"./saved_data/{filename}")
+    streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, mode='multi', saving="json", saving_path=f"./saved_data/{filename}")
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example). 
     streamer.setDataHandler(PrintHandler())

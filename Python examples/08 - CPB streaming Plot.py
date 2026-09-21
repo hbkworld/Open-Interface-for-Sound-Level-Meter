@@ -73,9 +73,9 @@ if __name__ == "__main__":
     # WebXiStreamHandler takes several parameters to control what data is streamed:
     # host       - needed to connect to the device
     # sequenceID - an enum selecting which sequence to listen on
-    # cpb=True is used to listen on cpb
+    # Use mode= to select the stream type. This example uses CPB mode.    
     # Full sequence name used to look up the CPB sequence via WebXiStreamHandler
-    streamer = WebXiStreamHandler(host, sequenceID=sequenceID, cpb=True, sequenceNames=sequence_names)
+    streamer = WebXiStreamHandler(host, sequenceID=sequenceID, mode="cpb", sequenceNames=sequence_names)
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example).    
     streamer.setDataHandler(PrintHandler())
