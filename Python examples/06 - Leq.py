@@ -67,12 +67,7 @@ if __name__ == "__main__":
         # Start the stream
         streamer.startStream()
     except KeyboardInterrupt:
-        # Stop the measurement running on the device
-        stop_measurement(host)
         if streamer is not None:
-            # Flush/close the CSV file so no buffered rows are lost and saves to file. 
-            # Only needed if saving the recording to a file
-            streamer.data_handler.close()
-            # Remove the stream resource from the device
-            delete_stream(host, streamer.streamName)
+            # stop measurements, closes the stream and saves the data if saving is enabled.
+            streamer.stopStream()
         print("User exited the program")

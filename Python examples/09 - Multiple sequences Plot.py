@@ -67,8 +67,7 @@ class FigHandler:
 def on_close(event):
     # handles what functions to call when closing the figure
     streamer.stopStream()
-    # writes the data to the saved format
-    streamer.data_handler.close()
+    
 
 if __name__ == "__main__":
     # turns off all BB freq weights to prevent interference

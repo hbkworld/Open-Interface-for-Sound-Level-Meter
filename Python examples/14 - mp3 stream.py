@@ -65,7 +65,6 @@ class figureHandler(FigureHandler):
 
 
 def on_close():
-    stop_measurement(host)
     streamer.stopStream()
 
 

@@ -69,7 +69,6 @@ class figureHandler(FigureHandler):
         self.i += 1
 
 def on_close():
-    stop_measurement(host)
     streamer.stopStream()
 
 if __name__ == "__main__":

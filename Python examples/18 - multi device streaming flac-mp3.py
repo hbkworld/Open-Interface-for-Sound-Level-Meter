@@ -137,7 +137,7 @@ if __name__ == "__main__":
     # Insert the ips of your devices inside the devices list
     devices = [
         ("192.168.1.183"),
-        ("192.168.0.78"),
+        ("192.168.1.191"),
     ]
 
     # Sets up the streamhandler to for all the devices.

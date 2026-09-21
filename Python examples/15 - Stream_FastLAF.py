@@ -85,7 +85,6 @@ if __name__ == "__main__":
 
         # asyncio.run(main())
     except KeyboardInterrupt:
-        stop_measurement(host)
         if streamer is not None:
-            delete_stream(host, streamer.streamName)
+            streamer.stopStream()
         print("\nStream stopped by user.") 

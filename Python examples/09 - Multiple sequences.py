@@ -51,11 +51,8 @@ if __name__ == "__main__":
         streamer.setDataHandler(PrintHandler())
         streamer.startStream()
     except KeyboardInterrupt:
-        # stops the recording
-        stop_measurement(host)
         if streamer is not None:
-            # deletes the stream from the device
-            delete_stream(host, streamer.streamName)
+            streamer.stopStream()
         print("\nStream stopped by user.") 
 
  

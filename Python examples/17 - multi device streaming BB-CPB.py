@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # Insert the ips of your devices inside the devices list
     devices = [
         ( "192.168.1.183"),
-        ( "192.168.0.78"),
+        # ( "192.168.0.78"),
     ]
 
     # Enable the frequencies needed for streaming 
@@ -76,10 +76,7 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        # Stops all the streams at the same time 
+        # Stops all the streams at the same time. also saves the data if saving is enabled
         stop_all(streams)
 
-        # Important: close every data handler to flush each device's file.
-        for s in streams:
-            s.data_handler.close()
         print("\nStreams stopped by user.")

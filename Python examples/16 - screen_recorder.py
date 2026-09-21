@@ -55,7 +55,6 @@ class FigHandler:
 def on_close(event):
     # handles what functions to call when closing the figure
     streamer.stopStream()
-    meas.stop_measurement(host)
 
 if __name__ == "__main__":
     # WebXiStreamHandler takes several parameters to control what data is streamed:

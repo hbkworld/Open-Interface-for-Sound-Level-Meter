@@ -4,4 +4,4 @@ __pycache__/
 *.pyc
 slm_ip
 /saved_data/*
-.vscode/
+/.vscode/
