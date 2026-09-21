@@ -26,6 +26,6 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.3
 requests==2.34.2
 six==1.17.0
-slm-open-api-package==0.2.5
+slm-open-api-package==0.2.8
 urllib3==2.7.0
 websockets==17.1
