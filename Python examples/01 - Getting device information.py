@@ -23,9 +23,8 @@ host = set_host(__file__)
 UseHttps(use_https=False)
 
 """
-host and ip can also be set manually 
-ip = ip of the slm
-host = f"http://{ip}"
+host can also be set manually 
+host = ip of the slm
 """
 
 
