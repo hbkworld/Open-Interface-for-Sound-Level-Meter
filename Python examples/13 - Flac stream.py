@@ -23,9 +23,9 @@ from slm_api.enums.sequence_id_enum import SequenceIdEnums
 
 # FLAC streaming is only available on 2255
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
+host= webxi_helper.set_host(__file__)
 
 # Setup what sequence to stream on
 sequenceID = SequenceIdEnums.FLACSignal.value
@@ -77,10 +77,10 @@ if __name__ == "__main__":
     put(host, "/WebXi/Applications/SLM/Setup/AudioRecordingAnalysisQuality", json=1)
 
     # WebXiStreamHandler takes several parameters to control what data is streamed:
-    # host, ip - needed to connect to the device
+    # host - needed to connect to the device
     # flac=True to enable flac streaming
     # sequenceID - an enum selecting which sequence to listen on
-    streamer = WebXiStreamHandler(host, ip, flac=True, sequenceID=sequenceID)
+    streamer = WebXiStreamHandler(host, flac=True, sequenceID=sequenceID)
     fig = figureHandler()
     fig.app.aboutToQuit.connect(on_close)
     threading.Thread(target=streamer.startStream, daemon=True).start()

@@ -7,9 +7,9 @@ from slm_api.helpers.stream_handler import delete_stream
 from slm_api.helpers.measurment_handler import stop_measurement
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
+host= webxi_helper.set_host(__file__)
 
 # This example will stream 2 sequences, LAeq and LCeq. If more sequences is wanted add to this list
 # Incase of error make sure the sequences are enabled on the SLM.
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         # sequenceNames - names of the already-enabled sequences to look up and stream
         # leq_window_sec - moving average window length in seconds for each sequence
         #   (default 10 if not specified); alternatively use windowSize to set the raw sample count
-        streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True)
+        streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, multi=True)
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())

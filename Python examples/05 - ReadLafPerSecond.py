@@ -6,14 +6,14 @@
 import requests # Handle reply from server
 import pprint as pp # Pretty Print to nicely print out data from the response
 import time # For the 'sleep' funtion
-from slm_api.helpers.webxi_helper_functions import set_host_ip
-from slm_api.helpers.https_requests import get, put
+from slm_api.helpers.webxi_helper_functions import set_host
+from slm_api.helpers.https_requests import get
 
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = set_host_ip(__file__)
+host = set_host(__file__)
 
 
 """

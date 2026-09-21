@@ -12,9 +12,9 @@ import datetime
 
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
+host = webxi_helper.set_host(__file__)
 
 # Used to create file with a custom name and attach the current date and time to it.
 filename = f'name-of-file_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     # This example saves to a "saved_data" folder relative to the current working directory,
     # named after the current time and date. The folder is created below since it must
     # to change the filename edit the variable filename at the top of this file
-    streamer = WebXiStreamHandler(host, ip, sequenceNames=sequenceNames, multi=True, saving="json", saving_path=f"./saved_data/{filename}")
+    streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, multi=True, saving="json", saving_path=f"./saved_data/{filename}")
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example). 
     streamer.setDataHandler(PrintHandler())

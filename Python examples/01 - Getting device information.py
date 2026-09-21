@@ -11,12 +11,12 @@ The REST interface is accessed using normal HTTP requests and JSON, in this exam
 """
 
 from slm_api.helpers.https_requests import get, UseHttps
-from slm_api.helpers.webxi_helper_functions import set_host_ip
+from slm_api.helpers.webxi_helper_functions import set_host
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = set_host_ip(__file__)
+host = set_host(__file__)
 
 # By default https is enabled.
 # To disable https call the UseHttps class and set use_https=False

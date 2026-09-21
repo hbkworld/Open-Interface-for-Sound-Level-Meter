@@ -36,12 +36,12 @@ if __name__ == "__main__":
     # This example uses multiple slm's so multiple ips is also needed
     # Insert the ips of your devices inside the devices list
     devices = [
-        ("http://192.168.1.183", "192.168.1.183"),
-        ("http://192.168.0.78", "192.168.0.78"),
+        ( "192.168.1.183"),
+        ( "192.168.0.78"),
     ]
 
     # Enable the frequencies needed for streaming 
-    for dev_host, dev_ip in devices:
+    for dev_host in devices:
         webxi_helper.turn_off_CPB_freq_weight(dev_host)
         webxi_helper.turn_on_CPB_freq_weight(dev_host, "A")
         webxi_helper.turn_on_cpb_leq(dev_host, SEQUENCE_NAME)
@@ -52,20 +52,20 @@ if __name__ == "__main__":
     # Sets up the streamhandler to for all the devices.
     # multi_device=True is important for multi device streaming
     streams = []
-    for dev_host, dev_ip in devices:
+    for dev_host in devices:
         # if the data is to be saved uncomment the line under this. This will save the data from each device in its own file
-        filename = f'{dev_ip}_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
+        filename = f'{dev_host}_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
         streams.append(
             WebXiStreamHandler(
-                host=dev_host, ip=dev_ip, sequenceID=SEQUENCE_ID,
-                streamName=f"Stream_{dev_ip}", multi_device=True, cpb=True,
+                host=dev_host, sequenceID=SEQUENCE_ID,
+                streamName=f"Stream_{dev_host}", multi_device=True, cpb=True,
                 # example how to save the data, saving support, "csv","json", "pickle". Important to call the close function, look at the end of the file
                 saving="json", saving_path=f"./saved_data/{filename}"
             )
         )
     # Sets a printhandler for all the streams if printing the data is needed
     for s in streams:
-        s.setDataHandler(PrintDataHandler(s.ip))
+        s.setDataHandler(PrintDataHandler(s.host))
 
     # sleep(1) is used to make sure every device has finished setting up their streamhandler
     time.sleep(1)

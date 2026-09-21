@@ -11,9 +11,9 @@ import datetime
 
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
+host = webxi_helper.set_host(__file__)
 
 # By default https is enabled
 # If https is not needed the line below this shows how to disable it for all request calls
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         #   leq_window_sec  - moving average window length in seconds (default 10 if not specified)
         #   saving          - "csv", "json", or "pickle"; the format to save data as
         #   saving_path     - the file path to save the data to
-        streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceId, saving="csv", saving_path=f"./saved_data/{filename}")
+        streamer = WebXiStreamHandler(host, sequenceID=sequenceId, saving="csv", saving_path=f"./saved_data/{filename}")
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())
