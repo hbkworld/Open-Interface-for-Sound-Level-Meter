@@ -59,7 +59,8 @@ if __name__ == "__main__":
         #   leq_window_sec  - moving average window length in seconds (default 10 if not specified)
         #   saving          - "csv", "json", or "pickle"; the format to save data as
         #   saving_path     - the file path to save the data to
-        streamer = WebXiStreamHandler(host, sequenceID=sequenceId, saving="csv", saving_path=f"./saved_data/{filename}")
+        #   mode            - selects which mode to use. leq is the default mode.
+        streamer = WebXiStreamHandler(host, sequenceID=sequenceId, mode="leq", saving="csv", saving_path=f"./saved_data/{filename}")
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())
