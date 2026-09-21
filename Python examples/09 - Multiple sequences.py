@@ -40,7 +40,7 @@ if __name__ == "__main__":
     streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
-        # host, ip - needed to connect to the device
+        # host          - needed to connect to the device
         # multi = True because we're streaming more than one sequence at once
         # sequenceNames - names of the already-enabled sequences to look up and stream
         # leq_window_sec - moving average window length in seconds for each sequence

@@ -71,7 +71,7 @@ if __name__ == "__main__":
     webxi_helper.turn_on_cpb_leq(host, sequence_names)
 
     # WebXiStreamHandler takes several parameters to control what data is streamed:
-    # host, ip - needed to connect to the device
+    # host       - needed to connect to the device
     # sequenceID - an enum selecting which sequence to listen on
     # cpb=True is used to listen on cpb
     # Full sequence name used to look up the CPB sequence via WebXiStreamHandler

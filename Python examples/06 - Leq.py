@@ -54,7 +54,7 @@ if __name__ == "__main__":
     streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
-        #   host, ip        - needed to connect to the device
+        #   host            - needed to connect to the device
         #   sequenceID      - an enum selecting which sequence to listen on
         #   leq_window_sec  - moving average window length in seconds (default 10 if not specified)
         #   saving          - "csv", "json", or "pickle"; the format to save data as

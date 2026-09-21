@@ -73,7 +73,7 @@ if __name__ == "__main__":
     webxi_helper.turn_on_bb_leq(host, ['LAeq'])
 
     # WebXiStreamHandler takes several parameters to control what data is streamed:
-    # host, ip     - needed to connect to the device
+    # host         - needed to connect to the device
     # sequenceID   - an enum selecting which sequence to listen on
     # leq_window_sec sets the moving average window length in seconds, default is 10 if not specified
     streamer = WebXiStreamHandler(host, sequenceID=sequenceID)
