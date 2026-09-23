@@ -28,10 +28,12 @@ from slm_api.enums.sequence_id_enum import SequenceIdEnums
 # Sequence and sample to use for mp3 streaming
 # SEQUENCE_ID = SequenceIdEnums.MP3Signal.value 
 # SAMPLE_RATE = 32e3
+# stream_mode = "mp3"
 
 # Sequence and sample rate to use for Flac streaming
 SEQUENCE_ID = SequenceIdEnums.FLACSignal.value
 SAMPLE_RATE = 2 ** 16
+stream_mode = "flac"
 
 # samples pulled per plot update, i.e. the FFT window size and displayed time-domain length
 CHUNK_TO_SHOW = 2 ** 15  
@@ -146,7 +148,7 @@ if __name__ == "__main__":
         WebXiStreamHandler(
             host=dev_host, sequenceID=SEQUENCE_ID,
             streamName=f"Stream_{dev_host}", multi_device=True,
-            flac=True,
+            mode=stream_mode,
         )
         for dev_host in devices
     ]
