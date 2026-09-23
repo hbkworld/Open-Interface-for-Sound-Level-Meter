@@ -25,9 +25,9 @@ from slm_api.helpers.measurment_handler import stop_measurement
 
 # ---------- Configuration ---------- 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
+host = webxi_helper.set_host(__file__)
 
 
 SCALE = 0.01  # Raw Int16 value * SCALE = dB
@@ -71,12 +71,12 @@ if __name__ == "__main__":
     streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
-        # host, ip - needed to connect to the device
+        # host - needed to connect to the device
         # sequenceID - an enum selecting which sequence to listen on
-        # fast_logging = True to enable fast logging
+        # Use mode= to select the stream type. This example uses fast_logging mode.    
         # fast_logging_interval - FastLogInterval enum index (0-10), not milliseconds directly;
-        #   if omitted, the device's currently configured interval is read instead
-        streamer = WebXiStreamHandler(host, ip, sequenceID = SEQUENCE_ID, fast_logging=True, fast_logging_interval=FAST_LOGGING_INTERVAL)
+        # if omitted, the device's currently configured interval is read instead
+        streamer = WebXiStreamHandler(host, sequenceID = SEQUENCE_ID, mode="fast_logging", fast_logging_interval=FAST_LOGGING_INTERVAL)
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())
@@ -85,7 +85,6 @@ if __name__ == "__main__":
 
         # asyncio.run(main())
     except KeyboardInterrupt:
-        stop_measurement(host)
         if streamer is not None:
-            delete_stream(host, streamer.streamName)
+            streamer.stopStream()
         print("\nStream stopped by user.") 

@@ -11,9 +11,9 @@ import datetime
 
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
+host = webxi_helper.set_host(__file__)
 
 # By default https is enabled
 # If https is not needed the line below this shows how to disable it for all request calls
@@ -54,24 +54,20 @@ if __name__ == "__main__":
     streamer = None
     try:
         # WebXiStreamHandler takes several parameters to control what data is streamed:
-        #   host, ip        - needed to connect to the device
+        #   host            - needed to connect to the device
         #   sequenceID      - an enum selecting which sequence to listen on
         #   leq_window_sec  - moving average window length in seconds (default 10 if not specified)
         #   saving          - "csv", "json", or "pickle"; the format to save data as
         #   saving_path     - the file path to save the data to
-        streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceId, saving="csv", saving_path=f"./saved_data/{filename}")
+        #   mode            - selects which mode to use. leq is the default mode.
+        streamer = WebXiStreamHandler(host, sequenceID=sequenceId, mode="leq", saving="csv", saving_path=f"./saved_data/{filename}")
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())
         # Start the stream
         streamer.startStream()
     except KeyboardInterrupt:
-        # Stop the measurement running on the device
-        stop_measurement(host)
         if streamer is not None:
-            # Flush/close the CSV file so no buffered rows are lost and saves to file. 
-            # Only needed if saving the recording to a file
-            streamer.data_handler.close()
-            # Remove the stream resource from the device
-            delete_stream(host, streamer.streamName)
+            # stop measurements, closes the stream and saves the data if saving is enabled.
+            streamer.stopStream()
         print("User exited the program")

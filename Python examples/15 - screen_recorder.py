@@ -12,17 +12,15 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from PIL import Image
 
-from slm_api.helpers import sequence_handler as seq
-from slm_api.helpers import stream_handler as stream
+
 from slm_api.helpers import measurment_handler as meas
-from slm_api.helpers.webxi_helper_functions import set_host_ip
-from slm_api.webxi import webxi_stream
+from slm_api.helpers.webxi_helper_functions import set_host
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = set_host_ip(__file__)
+host = set_host(__file__)
 
 
 class FigHandler:
@@ -57,13 +55,12 @@ class FigHandler:
 def on_close(event):
     # handles what functions to call when closing the figure
     streamer.stopStream()
-    meas.stop_measurement(ip)
 
 if __name__ == "__main__":
     # WebXiStreamHandler takes several parameters to control what data is streamed:
-    # host, ip       - needed to connect to the device
-    # screen_record  - streams the ScreenImage sequence instead of audio/Leq data
-    streamer = WebXiStreamHandler(host, ip, screen_record=True)
+    # host           - needed to connect to the device
+    # Use mode= to select the stream type. This example uses screen_record mode.    
+    streamer = WebXiStreamHandler(host, mode="screen_record")
     fig = FigHandler(streamer)
     fig.startAnimation()
     # Starts the stream in another thread to not conflict with the figurehandler
