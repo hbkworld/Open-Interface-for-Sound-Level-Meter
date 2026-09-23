@@ -12,6 +12,8 @@ from slm_api.helpers.data_handler import DataHandler
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
 from slm_api.enums.fast_log_intervals_enum import FastLogInterval
 from slm_api.helpers import webxi_helper_functions as webxi_helper
+import numpy as np
+
 
 # Sets the sequence to stream on, this can be BB or CPB
 SEQUENCE_ID = SequenceIdEnums.CPBLAeq.value
@@ -29,7 +31,7 @@ class PrintDataHandler(DataHandler):
         self.label = label
 
     def handle(self, value, **data):
-        print(f"{self.label}  {SEQUENCE_NAME}: {value}")
+        print(f"{self.label}  {SEQUENCE_NAME}: {np.array2string(value, precision=2, suppress_small=True)}") # formats the 
 
 
 if __name__ == "__main__":
@@ -37,7 +39,7 @@ if __name__ == "__main__":
     # Insert the ips of your devices inside the devices list
     devices = [
         ( "192.168.1.183"),
-        # ( "192.168.0.78"),
+        ( "192.168.1.191"),
     ]
 
     # Enable the frequencies needed for streaming 
@@ -58,7 +60,7 @@ if __name__ == "__main__":
         streams.append(
             WebXiStreamHandler(
                 host=dev_host, sequenceID=SEQUENCE_ID,
-                streamName=f"Stream_{dev_host}", multi_device=True, cpb=True,
+                streamName=f"Stream_{dev_host}", multi_device=True, mode="cpb",
                 # example how to save the data, saving support, "csv","json", "pickle". Important to call the close function, look at the end of the file
                 saving="json", saving_path=f"./saved_data/{filename}"
             )
