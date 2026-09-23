@@ -7,7 +7,7 @@ from matplotlib.animation import FuncAnimation
 
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers import webxi_helper_functions as webxi_helper 
-from slm_api.helpers.data_handler import DataHandler
+from slm_api.helpers.data_handler import DataHandler, MultiDataHandler
 import datetime
 
 
@@ -36,33 +36,40 @@ class PrintHandler(DataHandler):
         print(f"{name}: {value}")
 
 
-class FigHandler:  
-   
-    def __init__(self, dataHandler):
+class FigHandler(DataHandler):
+    """Plot raw multi-sequence values received from the stream."""
+
+    def __init__(self, sequence_names, buffer_size=101):
+        self.buffers = {
+            name: np.full(buffer_size, np.nan)
+            for name in sequence_names
+        }
         self.fig, self.ax = plt.subplots(1,1)
-        axis = np.arange(-(len(dataHandler[0].getPlotData(True)) - 1),1,1)
-        self.dataHandler = dataHandler if isinstance(dataHandler, list) else [dataHandler]
+        axis = np.arange(-(buffer_size - 1), 1, 1)
         self.ln = []
-        for x, ii in zip(self.dataHandler, sequenceNames):
-            self.ln.append((self.ax.plot(axis,x.getPlotData(False), label=ii))[0])
+        for name in sequence_names:
+            self.ln.append((self.ax.plot(axis, self.buffers[name], label=name))[0])
         self.ax.set_xlim(left=np.min(axis), right=np.max(axis))
         self.ax.set_ylim(bottom=00, top=100)
         self.ax.set_xlabel("Time [s]")
         self.ax.set_ylabel("dB [SPL]")
         self.ax.set_title('Profile')
-        self.ax.legend(loc='upper right')
+        self.ax.legend()
         self.ax.grid()
         self.fig.autofmt_xdate()
         self.fig.tight_layout()
         self.fig.canvas.mpl_connect('close_event', on_close)
         self.fig.canvas.setWindowTitle('LAeq example') 
 
+    def handle(self, *, name, value, **data):
+        self.buffers[name] = np.append(self.buffers[name][1:], value)
+
     def _update(self, i): 
-        for idx, x in enumerate(self.dataHandler):
-            self.ln[idx].set_ydata(x.getPlotData(False))
+        for line, name in zip(self.ln, sequenceNames):
+            line.set_ydata(self.buffers[name])
 
     def startAnimation(self):
-        self.ani = FuncAnimation(self.fig, self._update, interval=1000)                     
+        self.ani = FuncAnimation(self.fig, self._update, interval=1000)                         
 
 def on_close(event):
     # handles what functions to call when closing the figure
@@ -93,8 +100,8 @@ if __name__ == "__main__":
     streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, mode='multi', saving="json", saving_path=f"./saved_data/{filename}")
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example). 
-    streamer.setDataHandler(PrintHandler())
-    fig = FigHandler(streamer.sequenceFuncs)
+    fig = FigHandler(sequenceNames)
+    streamer.setDataHandler(MultiDataHandler(PrintHandler(),fig))
     fig.startAnimation()
     threading.Thread(target=streamer.startStream, daemon=True).start()        
     plt.show()
