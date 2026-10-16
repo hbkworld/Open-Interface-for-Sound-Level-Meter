@@ -31,6 +31,14 @@ Then to run the examples use the command
 uv run '.\01 - Getting device information.py'
 ```
 
+To open the combined BB, CPB, FLAC, and MP3 dashboard, run:
+
+```
+uv run panel serve gui/dashboard.py --show
+```
+
+Select the desired streams and press Start selected. Stop all stops every stream on the device.
+
 ### If you're using pip
 
 First create and activate a virtual environment, so the packages are not installed into your system Python:
