@@ -37,7 +37,7 @@ To open the combined BB, CPB, FLAC, and MP3 dashboard, run:
 uv run panel serve gui/dashboard.py --show
 ```
 
-Select the desired streams and press Start selected. Stop all stops every stream on the device.
+Select BB measurements and a CPB measurement (including a 2nd-band variant if supported by the device), then press Start selected. Stop all stops every stream on the device.
 
 ### If you're using pip
 

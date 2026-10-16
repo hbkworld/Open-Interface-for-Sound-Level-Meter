@@ -29,6 +29,16 @@ FREQUENCY_LIMIT = 20_000
 WAVEFORM_INDICES = np.linspace(0, SAMPLE_COUNT - 1, WAVEFORM_POINTS, dtype=np.intp)
 FFT_WINDOW = np.hamming(FFT_SIZE)
 COLORS = {"A": "#167d8d", "C": "#d26b40", "B": "#2600ff", "Z": "#7957a0"}
+BB_METRICS = ("eq", "F", "Fmax", "Fmin", "S", "Smax", "Smin", "peak", "peak1s", "E")
+BB_SEQUENCES = [
+    name for weight in COLORS for metric in BB_METRICS
+    if (name := f"L{weight}{metric}") in SequenceIdEnums.__members__
+] + ["LAIeq", "LAImax", "LAFTeq"]
+CPB_METRICS = ("eq", "F", "Fmax", "Fmin", "S", "Smax", "Smin")
+CPB_SEQUENCES = [
+    f"CPBL{weight}{metric}{suffix}"
+    for weight in COLORS for metric in CPB_METRICS for suffix in ("", "2nd")
+]
 
 
 class BroadbandData(DataHandler):
@@ -139,8 +149,9 @@ def default_host() -> str:
 
 def build_dashboard() -> pn.Column:
     host = pn.widgets.TextInput(name="SLM host", value=default_host())
-    weights = pn.widgets.MultiChoice(name="Broadband", options=list(COLORS), value=["A", "C"])
-    cpb_weight = pn.widgets.Select(name="CPB spectrum", options=["Off", *COLORS], value="Off")
+    bb_values = pn.widgets.MultiChoice(name="Broadband measurements", options=BB_SEQUENCES,
+                                        value=["LAeq", "LCeq"])
+    cpb_value = pn.widgets.Select(name="CPB measurement", options=["Off", *CPB_SEQUENCES], value="Off")
     flac = pn.widgets.Checkbox(name="FLAC waveform and spectrum", value=False)
     mp3 = pn.widgets.Checkbox(name="MP3 waveform and spectrum", value=False)
     start = pn.widgets.Button(name="Start selected", button_type="primary")
@@ -168,24 +179,23 @@ def build_dashboard() -> pn.Column:
 
     def start_streams(_event: object) -> None:
         address = host.value.strip()
-        selected = list(weights.value)
-        band = cpb_weight.value
+        selected = list(bb_values.value)
+        cpb_name = cpb_value.value
         if not address:
             set_status("Enter an SLM host.", "warning")
             return
-        if not (selected or band != "Off" or flac.value or mp3.value):
+        if not (selected or cpb_name != "Off" or flac.value or mp3.value):
             set_status("Select at least one stream.", "warning")
             return
         try:
             stop_streams()
             if selected:
                 webxi_helper.turn_off_bb_freq_weight(address)
-                webxi_helper.turn_on_bb_freq_weight(address, selected)
-                names = [f"L{weight}eq" for weight in selected]
-                webxi_helper.turn_on_bb_leq(address, names)
-                data = BroadbandData(names)
+                webxi_helper.turn_on_bb_freq_weight(address, sorted({name[1] for name in selected}))
+                webxi_helper.turn_on_bb_leq(address, selected)
+                data = BroadbandData(selected)
                 stream = WebXiStreamHandler(
-                    address, sequenceNames=names, mode="multi",
+                    address, sequenceNames=selected, mode="multi",
                     streamName=f"Dashboard-BB-{uuid4().hex}",
                 )
                 streams.append(stream)
@@ -193,8 +203,8 @@ def build_dashboard() -> pn.Column:
                 source = ColumnDataSource(data={"x": list(range(HISTORY)), **data.snapshot()})
                 chart = figure(title="Broadband levels", height=300, sizing_mode="stretch_width",
                                x_axis_label="Samples", y_axis_label="Level [dB SPL]", y_range=(0, 120))
-                for weight, name in zip(selected, names):
-                    chart.line("x", name, source=source, color=COLORS[weight], line_width=2, legend_label=name)
+                for name in selected:
+                    chart.line("x", name, source=source, color=COLORS[name[1]], line_width=2, legend_label=name)
                 chart.legend.click_policy = "hide"
                 plots.append(pn.pane.Bokeh(chart))
 
@@ -203,14 +213,16 @@ def build_dashboard() -> pn.Column:
 
                 updates.append(update_bb)
 
-            if band != "Off":
+            if cpb_name != "Off":
+                band = cpb_name[4]
                 webxi_helper.turn_off_CPB_freq_weight(address)
-                webxi_helper.turn_on_CPB_freq_weight(address, band)
-                name = f"CPBL{band}eq"
-                webxi_helper.turn_on_cpb_leq(address, name)
+                webxi_helper.turn_on_CPB_freq_weight(
+                    address, band + ("2nd" if cpb_name.endswith("2nd") else "")
+                )
+                webxi_helper.turn_on_cpb_leq(address, cpb_name)
                 data_cpb = CPBData()
                 stream = WebXiStreamHandler(
-                    address, sequenceNames=[name], mode="cpb",
+                    address, sequenceNames=[cpb_name], mode="cpb",
                     streamName=f"Dashboard-CPB-{uuid4().hex}",
                 )
                 streams.append(stream)
@@ -220,7 +232,7 @@ def build_dashboard() -> pn.Column:
                 source_cpb = ColumnDataSource(data={
                     "frequency": bands, "level": [0.0] * len(bands), "width": widths,
                 })
-                chart = figure(title=f"{name} spectrum", height=300, sizing_mode="stretch_width",
+                chart = figure(title=f"{cpb_name} spectrum", height=300, sizing_mode="stretch_width",
                                x_axis_label="Frequency band [Hz]", y_axis_label="Level [dB SPL]",
                                x_axis_type="log", y_range=(0, 120))
                 chart.vbar(x="frequency", top="level", bottom=0, width="width",
@@ -290,7 +302,7 @@ def build_dashboard() -> pn.Column:
     pn.state.add_periodic_callback(refresh, period=50)
     return pn.Column(
         pn.pane.Markdown("# Sound level dashboard"),
-        pn.FlexBox(host, weights, cpb_weight, flac, mp3, flex_wrap="wrap"),
+        pn.FlexBox(host, bb_values, cpb_value, flac, mp3, flex_wrap="wrap"),
         pn.Row(start, stop), status, plots, sizing_mode="stretch_width",
     )
 
