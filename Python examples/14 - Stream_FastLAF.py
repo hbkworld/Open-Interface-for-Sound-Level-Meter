@@ -62,7 +62,7 @@ if __name__ == "__main__":
     webxi_helper.turn_off_bb_freq_weight(host)
 
     # turns on the wanted BB freq weights for this example
-    webxi_helper.turn_on_bb_freq_weight(host, ["A"])
+    webxi_helper.turn_on_bb_freq_weight(host, ["A"], fast=True)
 
     # sets the sequences to true. 
     # For fastlogging add fast=True so it routes to the correct endpoint
