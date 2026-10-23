@@ -36,8 +36,7 @@ class PrintHandler(DataHandler):
             print(data)
     """
     def handle(self, value, **data):
-        print(f"{sequenceName}: " + "%.1f" % value)
-
+        print(f"{sequenceName}: {value:.2f}")
 
 
 
