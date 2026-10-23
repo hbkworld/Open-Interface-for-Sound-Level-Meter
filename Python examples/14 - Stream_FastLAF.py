@@ -51,8 +51,8 @@ class PrintHandler(DataHandler):
         def handle(self, **data):
             print(data)
     """
-    def handle(self, name, local, value, unit, **data):
-        print(f"{name} ({local}):  {value:7.2f} {unit}")
+    def handle(self, name, local, value, **data):
+        print(f"{name} ({local}):  {value:7.2f}")
 
 
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         # Use mode= to select the stream type. This example uses fast_logging mode.    
         # fast_logging_interval - FastLogInterval enum index (0-10), not milliseconds directly;
         # if omitted, the device's currently configured interval is read instead
-        streamer = WebXiStreamHandler(host, sequenceID = SEQUENCE_ID, mode="fast_logging", fast_logging_interval=FAST_LOGGING_INTERVAL, saving="csv", saving_path="./saved_data/fast_test")
+        streamer = WebXiStreamHandler(host, sequenceID = SEQUENCE_ID, mode="fast_logging", fast_logging_interval=FAST_LOGGING_INTERVAL, saving="json")
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())
