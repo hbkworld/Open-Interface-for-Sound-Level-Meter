@@ -30,9 +30,10 @@ host= webxi_helper.set_host(__file__)
 # Setup what sequence to stream on
 sequenceID = SequenceIdEnums.FLACSignal.value
 
-
-
 class figureHandler(FigureHandler):
+    def __init__(self, streamer):
+        self.streamer = streamer
+        super().__init__()
 
     def axisConfig(self):
         self.plotTime.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 11))
@@ -45,6 +46,8 @@ class figureHandler(FigureHandler):
         self.plotFreq.getAxis('bottom').setLabel('Frequency', units='Hz', **self.labelStyle)
 
     def update(self):
+        if not self.streamer.audio_ready:
+            return
         signal = DataBuffer.getPart(self.chunkToShow)
         x = np.linspace(np.min(self.axis), np.max(self.axis), len(signal))
         freq, s_dbfs = dBfft(signal, 2**16, self.fftHamming, ref=20e-6)  #Reference = 20µPa
@@ -80,7 +83,7 @@ if __name__ == "__main__":
     # Use mode= to select the stream type. This example uses flac mode.    
     # sequenceID - an enum selecting which sequence to listen on
     streamer = WebXiStreamHandler(host, mode="flac", sequenceID=sequenceID)
-    fig = figureHandler()
+    fig = figureHandler(streamer)
     fig.app.aboutToQuit.connect(on_close)
     threading.Thread(target=streamer.startStream, daemon=True).start()
     fig.run()
