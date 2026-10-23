@@ -1,111 +1,31 @@
-# This example shows how to stream an LAeq stream with timestamps. 
-# Some of the functionality to stream the timestamps can be found in example "09 - Multiple sequences"
-# as the timestamps come from a stream itself.
+# This example shows how to stream an LAeq stream with timestamps.
 
-import asyncio 
-import time
-import socket
-from datetime import datetime, timezone
-
-import HelpFunctions.sequence_handler as seq
-
-import numpy as np
-
-# Modules to convert webxi data
-import webxi.webxi_stream as webxiStream
-# Help functions located in HelpFunction folder
-# Read these files to get examples on how to communicate with the SLM
-import HelpFunctions.stream_handler as stream           # SLM stream functions
-import HelpFunctions.measurment_handler as meas         # Start/pause/Stop measurments functions
-import HelpFunctions.sequence_handler as seq            # Get sequences, e.g. LAeq functions
-from HelpFunctions.Leq import MovingLeq # Class to hold moving Leq 
-import HelpFunctions.websocket_handler as webSocket     # Async functions to control communication
-from slm_api.helpers import webxi_helper_functions as webxi_helper 
+from slm_api.helpers import webxi_helper_functions as webxi_helper
+from slm_api.helpers.data_handler import DataHandler
+from slm_api.helpers.stream_handlers import WebXiStreamHandler
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
-
-socket.gethostbyname(socket.gethostname())
-
-# Setup streaming info. Here we will stream an LAeq stream with timestamps.
-# The timestamps are obtained using the StartTime and StopTime, where the StartTime is the time at which the stream started and StopTime is the elapsed time
-sequenceNames = ["LAeq", "StartTime", "ElapsedTime"]
-
-class timeStamps:
-    @property
-    def StartTime(self):
-        return self.__startTime
-    @StartTime.setter
-    def StartTime(self, Value):
-        if self.__startTime is None:
-            adder = (-1 * (time.timezone))
-            self.__startTime = Value + adder
-    @property    
-    def lastTime(self):
-        return datetime.fromtimestamp(self.__timeBuffer[-1], tz=timezone.utc).strftime('%H:%M:%S')
-
-    def __init__(self, bufferSize) -> None:
-        self.__startTime = None
-        self.__timeBuffer = np.zeros(bufferSize)
-
-    def move(self, NewValue):
-        NewValue = NewValue + self.StartTime
-        self.__timeBuffer = np.append(self.__timeBuffer[1:], NewValue)
-        return self.lastTime
+host = webxi_helper.set_host(__file__)
 
 
-def print_data(message, IDs, sequences, sequenceFuncs):
-    package = webxiStream.WebxiStream.from_bytes(message)
-    if package.header.message_type == webxiStream.WebxiStream.Header.EMessageType.e_sequence_data:
-        for ID, sequence, Func, Name in zip(IDs, sequences, sequenceFuncs, sequenceNames):
-            for data in package.content.sequence_blocks:
-                if data.sequence_id == ID:
-                    value = stream.data_type_conv(sequence["DataType"], data.values, None)
-
-                    if sequence["DataType"] == "BKTimeSpan":
-                        handleTimeData(value, sequence, Func, Name, sequenceFuncs)
-                    else:
-                        handleData(value, sequence, Func, Name, sequenceFuncs)
-
-def handleTimeData(value, sequence, Func, Name, sequenceFuncs):
-    if Name == "StartTime":
-        Func.StartTime = value
-    else:
-        ii = sequenceNames.index("StartTime")
-        Func.StartTime = sequenceFuncs[ii].StartTime
-        Func.move(value)
-
-def handleData(value, sequence, Func, Name, sequenceFuncs):
-    ii = sequenceNames.index("ElapsedTime")
-    value = (np.array(value) if isinstance(value, list) else value) / 100
-    move = Func.move(value)
-    seqName = sequence["Name"]
-    print(f"{sequenceFuncs[ii].lastTime} {seqName}: {value} and 10s avg: {move:.2f}")
-
-async def main():
-    IDs = []
-    sequences = []
-    sequenceFuncs = []
-
-    for x in sequenceNames:
-        ID, sequence = seq.get_sequence(host, seq.getSequenceID(host, x))
-        IDs.append(ID)
-        sequences.append(sequence)
-        sequenceFuncs.append(MovingLeq(10, storedata=True) if sequence['DataType'] == "Int16" else timeStamps(101))
-
-    uri = stream.setup_stream(host, ip, IDs, "MultipleSequences")
-    # Start a measurement. This is needed to obtain data from the device
-    meas.start_pause_measurement(host,True) 
-
-    msg_func = lambda msg : print_data(msg, IDs, sequences, sequenceFuncs)
-    
-    await webSocket.next_async_websocket(uri, msg_func)
+class PrintHandler(DataHandler):
+    def handle(self, *, timestamp, name, value, **data):
+        print(f"{timestamp}{name}: {value:.2f}")
 
 if __name__ == "__main__":
+    streamer = None
     try:
-        asyncio.run(main())
+        streamer = WebXiStreamHandler(
+            host,
+            sequenceNames=["LAeq"],
+            streamName="TimestampedLAeq",
+            mode="multi",
+            time=True,
+        )
+        streamer.setDataHandler(PrintHandler())
+        streamer.startStream()
     except KeyboardInterrupt:
-        meas.stop_measurement(host)
-        stream.delete_stream(host, "MultipleSequences")
+        if streamer is not None:
+            streamer.stopStream()

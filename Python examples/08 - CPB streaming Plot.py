@@ -10,9 +10,9 @@ from slm_api.helpers.data_handler import DataHandler
 
 
 """
-set_host_ip creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
+set_host creates/reads the `slm_ip` file in the project root. If the IP changes, update or delete `slm_ip` to be prompted again.
 """
-host, ip = webxi_helper.set_host_ip(__file__)
+host = webxi_helper.set_host(__file__)
 
 # Full sequence name used to look up the CPB sequence via WebXiStreamHandler
 # (only sequenceNames[0] is used for cpb=True)
@@ -71,11 +71,11 @@ if __name__ == "__main__":
     webxi_helper.turn_on_cpb_leq(host, sequence_names)
 
     # WebXiStreamHandler takes several parameters to control what data is streamed:
-    # host, ip - needed to connect to the device
+    # host       - needed to connect to the device
     # sequenceID - an enum selecting which sequence to listen on
-    # cpb=True is used to listen on cpb
+    # Use mode= to select the stream type. This example uses CPB mode.    
     # Full sequence name used to look up the CPB sequence via WebXiStreamHandler
-    streamer = WebXiStreamHandler(host, ip, sequenceID=sequenceID, cpb=True, sequenceNames=sequence_names)
+    streamer = WebXiStreamHandler(host, sequenceID=sequenceID, mode="cpb", sequenceNames=sequence_names)
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example).    
     streamer.setDataHandler(PrintHandler())
