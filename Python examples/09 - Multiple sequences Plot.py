@@ -62,10 +62,12 @@ class FigHandler(DataHandler):
         self.fig.canvas.setWindowTitle('LAeq example') 
 
     def handle(self, *, name, value, **data):
+        if name not in self.buffers:
+            return
         self.buffers[name] = np.append(self.buffers[name][1:], value)
 
     def _update(self, i): 
-        for line, name in zip(self.ln, sequenceNames):
+        for line, name in zip(self.ln, self.buffers):
             line.set_ydata(self.buffers[name])
 
     def startAnimation(self):
@@ -92,16 +94,17 @@ if __name__ == "__main__":
     # sequenceNames  - names of the already-enabled sequences to look up and stream
     # leq_window_sec - moving average window length in seconds for each sequence
     #   (default 10 if not specified); alternatively use windowSize to set the raw sample count
-    # saving - "csv", "json", or "pickle"; the format to save data as
-    # saving_path    - the file path to save the data to. Remember to call streamer.data_handler.close() to save the data on closure. 
-    # This example saves to a "saved_data" folder relative to the current working directory,
-    # named after the current time and date. The folder is created below since it must
-    # to change the filename edit the variable filename at the top of this file
-    streamer = WebXiStreamHandler(host, sequenceNames=sequenceNames, mode='multi', saving="json", saving_path=f"./saved_data/{filename}")
+    streamer = WebXiStreamHandler(
+        host,
+        sequenceNames=sequenceNames,
+        mode="multi",
+        saving="json",
+        saving_path=f"./saved_data/{filename}",
+    )
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example). 
     fig = FigHandler(sequenceNames)
-    streamer.setDataHandler(MultiDataHandler(PrintHandler(),fig))
+    streamer.setDataHandler(MultiDataHandler(PrintHandler(), fig))
     fig.startAnimation()
     threading.Thread(target=streamer.startStream, daemon=True).start()        
     plt.show()
