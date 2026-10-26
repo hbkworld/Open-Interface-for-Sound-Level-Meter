@@ -36,8 +36,7 @@ class PrintHandler(DataHandler):
             print(data)
     """
     def handle(self, value, **data):
-        print(f"{sequenceName}: " + "%.1f" % value)
-
+        print(f"{sequenceName}: {value:.2f}")
 
 
 
@@ -57,10 +56,10 @@ if __name__ == "__main__":
         #   host            - needed to connect to the device
         #   sequenceID      - an enum selecting which sequence to listen on
         #   leq_window_sec  - moving average window length in seconds (default 10 if not specified)
-        #   saving          - "csv", "json", or "pickle"; the format to save data as
-        #   saving_path     - the file path to save the data to
+        #   save_format     - "csv" or "json"; the format to save data as
+        #   save_path       - the file path to save the data to
         #   mode            - selects which mode to use. leq is the default mode.
-        streamer = WebXiStreamHandler(host, sequenceID=sequenceId, mode="leq", saving="csv", saving_path=f"./saved_data/{filename}")
+        streamer = WebXiStreamHandler(host, sequenceID=sequenceId, mode="leq", save_format="csv", save_path=f"./saved_data/{filename}")
         # To print incoming data, call setDataHandler() with an instance of your own
         # DataHandler subclass (see the PrintHandler class above for an example).
         streamer.setDataHandler(PrintHandler())

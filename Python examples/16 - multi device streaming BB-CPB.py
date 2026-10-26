@@ -61,8 +61,8 @@ if __name__ == "__main__":
             WebXiStreamHandler(
                 host=dev_host, sequenceID=SEQUENCE_ID,
                 streamName=f"Stream_{dev_host}", multi_device=True, mode="cpb",
-                # example how to save the data, saving support, "csv","json", "pickle". Important to call the close function, look at the end of the file
-                saving="json", saving_path=f"./saved_data/{filename}"
+                # save_format supports "csv" and "json". Important to call the close function, look at the end of the file
+                save_format="json", save_path=f"./saved_data/{filename}"
             )
         )
     # Sets a printhandler for all the streams if printing the data is needed
