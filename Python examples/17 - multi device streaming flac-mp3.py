@@ -28,10 +28,12 @@ from slm_api.enums.sequence_id_enum import SequenceIdEnums
 # Sequence and sample to use for mp3 streaming
 # SEQUENCE_ID = SequenceIdEnums.MP3Signal.value 
 # SAMPLE_RATE = 32e3
+# stream_mode = "mp3"
 
 # Sequence and sample rate to use for Flac streaming
 SEQUENCE_ID = SequenceIdEnums.FLACSignal.value
 SAMPLE_RATE = 2 ** 16
+stream_mode = "flac"
 
 # samples pulled per plot update, i.e. the FFT window size and displayed time-domain length
 CHUNK_TO_SHOW = 2 ** 15  
@@ -136,25 +138,25 @@ if __name__ == "__main__":
     # This example uses multiple slm's so multiple ips is also needed
     # Insert the ips of your devices inside the devices list
     devices = [
-        ("http://192.168.0.110", "192.168.0.110"),
-        ("http://192.168.0.78", "192.168.0.78"),
+        ("192.168.1.183"),
+        ("192.168.1.191"),
     ]
 
     # Sets up the streamhandler to for all the devices.
     # multi_device=True is important for multi device streaming
     streams = [
         WebXiStreamHandler(
-            host=dev_host, ip=dev_ip, sequenceID=SEQUENCE_ID,
-            streamName=f"Stream_{dev_ip}", multi_device=True,
-            flac=True,
+            host=dev_host, sequenceID=SEQUENCE_ID,
+            streamName=f"Stream_{dev_host}", multi_device=True,
+            mode=stream_mode,
         )
-        for dev_host, dev_ip in devices
+        for dev_host in devices
     ]
     handlers = [BufferDataHandler() for _ in streams]
     for s, h in zip(streams, handlers):
         s.setDataHandler(h)
 
-    fig = MultiDeviceFigureHandler([(s.ip, h) for s, h in zip(streams, handlers)])
+    fig = MultiDeviceFigureHandler([(s.host, h) for s, h in zip(streams, handlers)])
     fig.app.aboutToQuit.connect(lambda: stop_all(streams))
 
 
