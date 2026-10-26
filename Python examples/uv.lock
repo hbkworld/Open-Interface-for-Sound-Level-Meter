@@ -1296,7 +1296,7 @@ requires-dist = [
     { name = "pyqtgraph" },
     { name = "python-dotenv" },
     { name = "requests" },
-    { name = "slm-open-api-package", specifier = "==0.2.16" },
+    { name = "slm-open-api-package", specifier = "==0.2.17" },
     { name = "websockets" },
 ]
 
@@ -1384,7 +1384,7 @@ wheels = [
 
 [[package]]
 name = "slm-open-api-package"
-version = "0.2.16"
+version = "0.2.17"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -1401,9 +1401,9 @@ dependencies = [
     { name = "soundfile" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3f/7c/842a2746153f0ae0fc4efedb47ce57e6ebad2a99536e92d1d73602564e32/slm_open_api_package-0.2.16.tar.gz", hash = "sha256:bae37aa42ac1f05d255ac5e67e375b94f122c08d7643ee8717c9895f1fc7b6f7", size = 44431, upload-time = "2026-10-23T12:45:18.403Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d1/09/75018d9aeb4b1cd9c4bbc78c26939cd9f8b6e858af0d2069cc83ba67c197/slm_open_api_package-0.2.17.tar.gz", hash = "sha256:771fd6e8aa142b67af74deff3c80b868d1d4e8c3da7a6a19944430f4d92fa715", size = 44377, upload-time = "2026-10-26T08:01:46.454Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a2/5d/0af7591281bb03398dcae0aab7fb09c7cd50675f1dec69c946e1b6b5583e/slm_open_api_package-0.2.16-py3-none-any.whl", hash = "sha256:7552e4dd209048967c16916cf518052318215cc614c6e02be8a4a5bdc63b85fa", size = 55739, upload-time = "2026-10-23T12:45:17.402Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/d5/b3de2e6e0aaf9f6b4866668d397e59056ba465c25bb03c2c6753a840b5fe/slm_open_api_package-0.2.17-py3-none-any.whl", hash = "sha256:c67cfd5e67bb84280e0d3052def62fb348d7e10d61036121b21688294643ed18", size = 55715, upload-time = "2026-10-26T08:01:45.402Z" },
 ]
 
 [[package]]

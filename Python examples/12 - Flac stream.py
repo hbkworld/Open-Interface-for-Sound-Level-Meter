@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # host - needed to connect to the device
     # Use mode= to select the stream type. This example uses flac mode.    
     # sequenceID - an enum selecting which sequence to listen on
-    streamer = WebXiStreamHandler(host, mode="flac", sequenceID=sequenceID)
+    streamer = WebXiStreamHandler(host, mode="flac", sequenceID=sequenceID, saving="wav", saving_path="saved_data/flac")
     fig = figureHandler()
     fig.app.aboutToQuit.connect(on_close)
     threading.Thread(target=streamer.startStream, daemon=True).start()
