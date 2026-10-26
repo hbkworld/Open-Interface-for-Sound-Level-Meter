@@ -16,11 +16,11 @@ host = webxi_helper.set_host(__file__)
 
 # Full sequence name used to look up the CPB sequence via WebXiStreamHandler
 # (only sequenceNames[0] is used for cpb=True)
-sequence_names = ["CPBLAeq"]
+sequence_names = ["CPBLBeq2nd"]
 
 
 # Setup what sequence to stream on
-sequenceID= SequenceIdEnums.CPBLAeq.value   
+sequenceID= SequenceIdEnums.CPBLBeq2nd.value   
 
 class PrintHandler(DataHandler):
     """Handler to control what gets printed. It must subclass DataHandler and
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     webxi_helper.turn_off_CPB_freq_weight(host)
 
     # turns on the CPB freq weight we want to use, in this case A weight
-    webxi_helper.turn_on_CPB_freq_weight(host, ["A"])
+    webxi_helper.turn_on_CPB_freq_weight(host, ["B"])
 
     # turns on the CPB eq we want to use
     webxi_helper.turn_on_cpb_leq(host, sequence_names)

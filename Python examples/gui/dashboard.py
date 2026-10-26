@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import threading
 from collections import deque
 from collections.abc import Callable
@@ -16,6 +17,7 @@ from slm_api.helpers import webxi_helper_functions as webxi_helper
 from slm_api.helpers.data_handler import DataHandler
 from slm_api.helpers.fft import dBfft
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
+from slm_api.helpers.webxi_helper_functions import set_host
 
 pn.extension()
 
@@ -143,8 +145,9 @@ class SpectrumWorker:
 
 
 def default_host() -> str:
-    path = Path(__file__).resolve().parents[1] / "slm_ip"
-    return path.read_text(encoding="utf-8").strip() if path.exists() else ""
+    # path = Path(__file__).resolve().parents[1] / "slm_ip"
+    path = set_host()
+    return path
 
 
 def build_dashboard() -> pn.Column:
@@ -161,6 +164,22 @@ def build_dashboard() -> pn.Column:
     streams: list[WebXiStreamHandler] = []
     workers: list[SpectrumWorker] = []
     updates: list[Callable[[], None]] = []
+    save_streams = pn.widgets.MultiChoice(name="Save streams", options=["BB", "CPB"])
+    save_flac = pn.widgets.Toggle(name="Save FLAC", value=False, button_type="light")
+    save_mp3 = pn.widgets.Toggle(name="Save MP3", value=False, button_type="light")
+    save_format = pn.widgets.Select(name="BB / CPB file format", options=["json", "csv"], value="json")
+    file_name = pn.widgets.TextInput(name="Filename", value="name-of-file")
+    folder_picker = pn.widgets.FileSelector(
+        name="Destination folder", directory=str(Path(__file__).resolve().parents[1]),
+        only_files=False,
+    )
+
+    def update_save_button(event: object) -> None:
+        button = event.obj
+        button.button_type = "success" if event.new else "light"
+
+    save_flac.param.watch(update_save_button, "value")
+    save_mp3.param.watch(update_save_button, "value")
 
     def set_status(message: str, kind: str = "light") -> None:
         status.object = message
@@ -187,6 +206,38 @@ def build_dashboard() -> pn.Column:
         if not (selected or cpb_name != "Off" or flac.value or mp3.value):
             set_status("Select at least one stream.", "warning")
             return
+        active_types = {label for label, enabled in (
+            ("BB", bool(selected)), ("CPB", cpb_name != "Off"),
+            ("FLAC", flac.value), ("MP3", mp3.value),
+        ) if enabled}
+        saved_types = set(save_streams.value) & active_types
+        destination = None
+        if saved_types:
+            if len(folder_picker.value) != 1 or not Path(folder_picker.value[0]).is_dir():
+                set_status("Select exactly one destination folder for saved data.", "warning")
+                return
+            destination = Path(folder_picker.value[0])
+            prefix = file_name.value.strip()
+            if (not prefix or prefix in {".", ".."}
+                    or any(character in '<>:"/\\|?*' or ord(character) < 32 for character in prefix)
+                    or prefix.endswith((".", " "))):
+                set_status("Enter a valid filename without a path or extension.", "warning")
+                return
+        filename = f'{file_name.value.strip()}_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
+
+        def saving_options(stream_type: str) -> dict[str, str]:
+            if stream_type not in saved_types or destination is None:
+                return {}
+            extension = "wav" if stream_type in {"FLAC", "MP3"} else save_format.value
+            stem = f"{filename}_{stream_type}"
+            candidate = stem
+            counter = 2
+            while ((destination / f"{candidate}.{extension}").exists()
+                   or any(destination.glob(f"{candidate}_fullscale-*.wav"))):
+                candidate = f"{stem}_{counter}"
+                counter += 1
+            return {"saving": extension, "saving_path": str(destination / candidate)}
+
         try:
             stop_streams()
             if selected:
@@ -197,6 +248,7 @@ def build_dashboard() -> pn.Column:
                 stream = WebXiStreamHandler(
                     address, sequenceNames=selected, mode="multi",
                     streamName=f"Dashboard-BB-{uuid4().hex}",
+                    **saving_options("BB"),
                 )
                 streams.append(stream)
                 stream.setDataHandler(data)
@@ -217,13 +269,14 @@ def build_dashboard() -> pn.Column:
                 band = cpb_name[4]
                 webxi_helper.turn_off_CPB_freq_weight(address)
                 webxi_helper.turn_on_CPB_freq_weight(
-                    address, band + ("2nd" if cpb_name.endswith("2nd") else "")
+                    address, band #+ ("2nd" if cpb_name.endswith("2nd") else "")
                 )
                 webxi_helper.turn_on_cpb_leq(address, cpb_name)
                 data_cpb = CPBData()
                 stream = WebXiStreamHandler(
                     address, sequenceNames=[cpb_name], mode="cpb",
                     streamName=f"Dashboard-CPB-{uuid4().hex}",
+                    **saving_options("CPB"),
                 )
                 streams.append(stream)
                 stream.setDataHandler(data_cpb)
@@ -245,10 +298,15 @@ def build_dashboard() -> pn.Column:
                         source.data = {"frequency": bands, "level": levels, "width": widths}
 
                 updates.append(update_cpb)
-
-            for enabled, mode, sequence_id, sample_rate in (
-                (flac.value, "flac", SequenceIdEnums.FLACSignal.value, SAMPLE_RATE),
-                (mp3.value, "mp3", SequenceIdEnums.MP3Signal.value, MP3_SAMPLE_RATE),
+            mp3_wav = None
+            flac_wav = None
+            if save_flac.value:
+                flac_wav = "wav"
+            if save_mp3.value:
+                mp3_wav = "wav"
+            for enabled, mode, sequence_id, sample_rate, saving in (
+                (flac.value, "flac", SequenceIdEnums.FLACSignal.value, SAMPLE_RATE, flac_wav),
+                (mp3.value, "mp3", SequenceIdEnums.MP3Signal.value, MP3_SAMPLE_RATE, mp3_wav),
             ):
                 if not enabled:
                     continue
@@ -256,6 +314,11 @@ def build_dashboard() -> pn.Column:
                 stream = WebXiStreamHandler(
                     address, mode=mode, sequenceID=sequence_id,
                     streamName=f"Dashboard-{mode.upper()}-{uuid4().hex}",
+                    saving=saving,
+                    saving_path=(
+                        str(destination / f"{filename}_{mode.upper()}")
+                        if saving and destination is not None else None
+                    ),
                 )
                 streams.append(stream)
                 stream.setDataHandler(data_audio)
@@ -285,7 +348,10 @@ def build_dashboard() -> pn.Column:
             for stream in streams:
                 threading.Thread(target=stream.startStream, daemon=True,
                                  name=f"dashboard-{stream.mode}").start()
-            set_status("Streaming selected data.", "success")
+            message = "Streaming selected data."
+            if saved_types:
+                message += f" Saving {', '.join(sorted(saved_types))} to {destination}."
+            set_status(message, "success")
         except Exception as error:
             try:
                 stop_streams()
@@ -303,6 +369,8 @@ def build_dashboard() -> pn.Column:
     return pn.Column(
         pn.pane.Markdown("# Sound level dashboard"),
         pn.FlexBox(host, bb_values, cpb_value, flac, mp3, flex_wrap="wrap"),
+        pn.FlexBox(save_streams, save_format, file_name, save_flac, save_mp3,flex_wrap="wrap"),
+        pn.Accordion(("Destination folder", folder_picker), active=[]),
         pn.Row(start, stop), status, plots, sizing_mode="stretch_width",
     )
 

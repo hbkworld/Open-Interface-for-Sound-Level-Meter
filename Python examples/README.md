@@ -39,6 +39,8 @@ uv run panel serve gui/dashboard.py --show
 
 Select BB measurements and a CPB measurement (including a 2nd-band variant if supported by the device), then press Start selected. Stop all stops every stream on the device.
 
+To save data, choose the active streams under Save streams, expand Destination folder, and select one folder on the PC running Panel. Set the filename prefix and choose JSON or CSV for BB/CPB. FLAC and MP3 save decoded audio as WAV, not as the original compressed audio files. Filenames follow `name-of-file_HHMM_MMDDYYYY_BB.json`, with the appropriate BB, CPB, FLAC, or MP3 suffix. Audio filenames also include the full-scale pressure added by the package. Repeated names receive a numeric suffix rather than overwriting existing files. Press Stop all to flush and close the saved data; Ctrl+C cleanup is not configured.
+
 ### If you're using pip
 
 First create and activate a virtual environment, so the packages are not installed into your system Python:
