@@ -98,8 +98,8 @@ if __name__ == "__main__":
         host,
         sequenceNames=sequenceNames,
         mode="multi",
-        saving="json",
-        saving_path=f"./saved_data/{filename}",
+        save_format="json",
+        save_path=f"./saved_data/{filename}",
     )
     # To print incoming data, call setDataHandler() with an instance of your own
     # DataHandler subclass (see the PrintHandler class above for an example). 
