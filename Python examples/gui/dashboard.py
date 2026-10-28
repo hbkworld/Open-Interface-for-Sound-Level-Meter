@@ -1,3 +1,9 @@
+"""
+To run the gui 
+$ panel serve .\gui\dashboard.py --show in therminal
+"""
+
+
 from __future__ import annotations
 
 import datetime
@@ -18,8 +24,11 @@ from slm_api.helpers.data_handler import DataHandler
 from slm_api.helpers.fft import dBfft
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers.webxi_helper_functions import set_host
+from slm_api.helpers.https_requests import get
 
 pn.extension()
+
+
 
 HISTORY = 120
 SAMPLE_RATE = 2**16
@@ -31,16 +40,9 @@ FREQUENCY_LIMIT = 20_000
 WAVEFORM_INDICES = np.linspace(0, SAMPLE_COUNT - 1, WAVEFORM_POINTS, dtype=np.intp)
 FFT_WINDOW = np.hamming(FFT_SIZE)
 COLORS = {"A": "#167d8d", "C": "#d26b40", "B": "#2600ff", "Z": "#7957a0"}
-BB_METRICS = ("eq", "F", "Fmax", "Fmin", "S", "Smax", "Smin", "peak", "peak1s", "E")
-BB_SEQUENCES = [
-    name for weight in COLORS for metric in BB_METRICS
-    if (name := f"L{weight}{metric}") in SequenceIdEnums.__members__
-] + ["LAIeq", "LAImax", "LAFTeq"]
-CPB_METRICS = ("eq", "F", "Fmax", "Fmin", "S", "Smax", "Smin")
-CPB_SEQUENCES = [
-    f"CPBL{weight}{metric}{suffix}"
-    for weight in COLORS for metric in CPB_METRICS for suffix in ("", "2nd")
-]
+
+    
+
 
 
 class BroadbandData(DataHandler):
@@ -145,15 +147,38 @@ class SpectrumWorker:
 
 
 def default_host() -> str:
-    # path = Path(__file__).resolve().parents[1] / "slm_ip"
     path = set_host()
     return path
 
+def get_bb_values(host):
+        webxi_values = get(host, "/WebXi?recursive").json()
+        setup = webxi_values["Applications"]["SLM"]["Setup"]
+        bb_values = []
+        for name in setup:
+            if name.startswith("BBL"):
+                bb_values.append(name.removeprefix("BB"))
+
+        return bb_values
+    
+def get_cpb_values(host):
+        webxi_values = get(host, "/WebXi?recursive").json()
+        setup = webxi_values["Applications"]["SLM"]["Setup"]
+        cpb_values = []
+        for name in setup:
+            if name.startswith("CPBL"):
+                cpb_values.append(name)
+
+        return cpb_values
+
 
 def build_dashboard() -> pn.Column:
+    
+    
     host = pn.widgets.TextInput(name="SLM host", value=default_host())
-    bb_values = pn.widgets.MultiChoice(name="Broadband measurements", options=BB_SEQUENCES,
-                                        value=["LAeq", "LCeq"])
+    BB_SEQUENCES = get_bb_values(host.value)
+    CPB_SEQUENCES = get_cpb_values(host.value)
+
+    bb_values = pn.widgets.MultiChoice(name="Broadband measurements", options=BB_SEQUENCES)
     cpb_value = pn.widgets.Select(name="CPB measurement", options=["Off", *CPB_SEQUENCES], value="Off")
     flac = pn.widgets.Checkbox(name="FLAC waveform and spectrum", value=False)
     mp3 = pn.widgets.Checkbox(name="MP3 waveform and spectrum", value=False)
@@ -173,6 +198,23 @@ def build_dashboard() -> pn.Column:
         name="Destination folder", directory=str(Path(__file__).resolve().parents[1]),
         only_files=False,
     )
+
+    # def get_cpb_values(host):
+    #     # host = set_host()
+    #     webxi_values = get(host, "/WebXi?recursive").json()
+    #     setup = webxi_values["Applications"]["SLM"]["Setup"]
+    #     # print(webxi_values)
+    #     bb_values = []
+    #     cpb_values = []
+    #     for name in setup:
+    #         if name.startswith("BBL"):
+    #             bb_values.append(name)
+    #         if name.startswith("CPBL"):
+    #             cpb_values.append(name)
+    
+    #     print(bb_values)
+    #     print(cpb_values)
+
 
     def update_save_button(event: object) -> None:
         button = event.obj
@@ -236,7 +278,7 @@ def build_dashboard() -> pn.Column:
                    or any(destination.glob(f"{candidate}_fullscale-*.wav"))):
                 candidate = f"{stem}_{counter}"
                 counter += 1
-            return {"saving": extension, "saving_path": str(destination / candidate)}
+            return {"save_format": extension, "save_path": str(destination / candidate)}
 
         try:
             stop_streams()
@@ -314,8 +356,8 @@ def build_dashboard() -> pn.Column:
                 stream = WebXiStreamHandler(
                     address, mode=mode, sequenceID=sequence_id,
                     streamName=f"Dashboard-{mode.upper()}-{uuid4().hex}",
-                    saving=saving,
-                    saving_path=(
+                    save_format=saving,
+                    save_path=(
                         str(destination / f"{filename}_{mode.upper()}")
                         if saving and destination is not None else None
                     ),
