@@ -15,7 +15,7 @@ from uuid import uuid4
 
 import numpy as np
 import panel as pn
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool
 from bokeh.plotting import figure
 
 from slm_api.enums.sequence_id_enum import SequenceIdEnums
@@ -24,7 +24,7 @@ from slm_api.helpers.data_handler import DataHandler
 from slm_api.helpers.fft import dBfft
 from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers.webxi_helper_functions import set_host
-from slm_api.helpers.https_requests import get
+from slm_api.helpers.https_requests import get, put
 
 pn.extension()
 
@@ -40,6 +40,25 @@ FREQUENCY_LIMIT = 20_000
 WAVEFORM_INDICES = np.linspace(0, SAMPLE_COUNT - 1, WAVEFORM_POINTS, dtype=np.intp)
 FFT_WINDOW = np.hamming(FFT_SIZE)
 COLORS = {"A": "#167d8d", "C": "#d26b40", "B": "#2600ff", "Z": "#7957a0"}
+
+
+def prioritize_hover(plot):
+    plot.js_on_change(
+        "inner_width",
+        CustomJS(
+            args={"toolbar": plot.toolbar},
+            code="""
+                if (toolbar.buttons === "auto") {
+                    const tools = [...toolbar.tools].sort(
+                        (first, second) =>
+                            Number(second.type === "HoverTool") -
+                            Number(first.type === "HoverTool"),
+                    );
+                    toolbar.buttons = tools.map(tool => tool.tool_button());
+                }
+            """,
+        ),
+    )
 
     
 
@@ -150,15 +169,23 @@ def default_host() -> str:
     path = set_host()
     return path
 
-def get_bb_values(host):
-        webxi_values = get(host, "/WebXi?recursive").json()
-        setup = webxi_values["Applications"]["SLM"]["Setup"]
-        bb_values = []
-        for name in setup:
-            if name.startswith("BBL"):
-                bb_values.append(name.removeprefix("BB"))
+def freq_values(host, letter):
+    to_capital = letter.upper()
+    freq = get(host, "/WebXi?recursive").json()
 
-        return bb_values
+    freq_bool = freq["Applications"]["SLM"]["Setup"][f"BBFreqWeight{to_capital}"]
+    return freq_bool
+
+def get_bb_values(host):
+    webxi_values = get(host, "/WebXi?recursive").json()
+    setup = webxi_values["Applications"]["SLM"]["Setup"]
+
+    return [
+        name.removeprefix("BB")
+        for name in setup
+        if name.startswith("BBL")
+        and setup[f"BBFreqWeight{name[3].upper()}"]
+    ]
     
 def get_cpb_values(host):
         webxi_values = get(host, "/WebXi?recursive").json()
@@ -178,6 +205,9 @@ def build_dashboard() -> pn.Column:
     BB_SEQUENCES = get_bb_values(host.value)
     CPB_SEQUENCES = get_cpb_values(host.value)
 
+    choose_bb_frequencies = pn.widgets.MultiChoice(name="Select BB frequencies", options=["A", "B", "C", "Z"], max_items=3)
+    enable_bb_frequencies = pn.widgets.Button(name="Enable selected BB frequencies", button_type="primary")
+    pause_measurement = pn.widgets.Button(name="Start/Pause measurement", button_type="primary" )
     bb_values = pn.widgets.MultiChoice(name="Broadband measurements", options=BB_SEQUENCES)
     cpb_value = pn.widgets.Select(name="CPB measurement", options=["Off", *CPB_SEQUENCES], value="Off")
     flac = pn.widgets.Checkbox(name="FLAC waveform and spectrum", value=False)
@@ -194,27 +224,11 @@ def build_dashboard() -> pn.Column:
     save_mp3 = pn.widgets.Toggle(name="Save MP3", value=False, button_type="light")
     save_format = pn.widgets.Select(name="BB / CPB file format", options=["json", "csv"], value="json")
     file_name = pn.widgets.TextInput(name="Filename", value="name-of-file")
+    save_timestamps = pn.widgets.Checkbox(name="Include timestamps", value=True)
     folder_picker = pn.widgets.FileSelector(
         name="Destination folder", directory=str(Path(__file__).resolve().parents[1]),
         only_files=False,
     )
-
-    # def get_cpb_values(host):
-    #     # host = set_host()
-    #     webxi_values = get(host, "/WebXi?recursive").json()
-    #     setup = webxi_values["Applications"]["SLM"]["Setup"]
-    #     # print(webxi_values)
-    #     bb_values = []
-    #     cpb_values = []
-    #     for name in setup:
-    #         if name.startswith("BBL"):
-    #             bb_values.append(name)
-    #         if name.startswith("CPBL"):
-    #             cpb_values.append(name)
-    
-    #     print(bb_values)
-    #     print(cpb_values)
-
 
     def update_save_button(event: object) -> None:
         button = event.obj
@@ -226,6 +240,40 @@ def build_dashboard() -> pn.Column:
     def set_status(message: str, kind: str = "light") -> None:
         status.object = message
         status.alert_type = kind
+
+    def start_pause_measurement(event):
+        put(host.value, "/WebXi/Applications/SLM?Action=StartPause")
+
+
+    pause_measurement.on_click(start_pause_measurement)
+
+
+    def activate_bb_frequencies(event):
+        address = host.value.strip()
+        selected = list(choose_bb_frequencies.value)
+
+        if not address or not selected:
+            set_status("Enter a host and select BB frequencies.", "warning")
+            return
+
+        try:
+            webxi_helper.turn_off_bb_freq_weight(address)
+            webxi_helper.turn_on_bb_freq_weight(address, selected)
+
+            allowed = [
+                name for name in BB_SEQUENCES
+                if name.startswith(tuple(f"L{weight}" for weight in selected))
+            ]
+            bb_values.value = [
+                name for name in bb_values.value if name in allowed
+            ]
+            bb_values.options = allowed
+
+            set_status(f"Enabled BB weights: {', '.join(selected)}", "success")
+        except Exception as error:
+            set_status(f"Could not enable BB weights: {error}", "danger")
+
+    enable_bb_frequencies.on_click(activate_bb_frequencies)
 
     def stop_streams(_event: object = None) -> None:
         for stream in streams:
@@ -253,6 +301,10 @@ def build_dashboard() -> pn.Column:
             ("FLAC", flac.value), ("MP3", mp3.value),
         ) if enabled}
         saved_types = set(save_streams.value) & active_types
+        if save_flac.value and flac.value:
+            saved_types.add("FLAC")
+        if save_mp3.value and mp3.value:
+            saved_types.add("MP3")
         destination = None
         if saved_types:
             if len(folder_picker.value) != 1 or not Path(folder_picker.value[0]).is_dir():
@@ -283,14 +335,12 @@ def build_dashboard() -> pn.Column:
         try:
             stop_streams()
             if selected:
-                webxi_helper.turn_off_bb_freq_weight(address)
-                webxi_helper.turn_on_bb_freq_weight(address, sorted({name[1] for name in selected}))
                 webxi_helper.turn_on_bb_leq(address, selected)
                 data = BroadbandData(selected)
                 stream = WebXiStreamHandler(
                     address, sequenceNames=selected, mode="multi",
                     streamName=f"Dashboard-BB-{uuid4().hex}",
-                    **saving_options("BB"),
+                    **saving_options("BB"), time=save_timestamps.value,
                 )
                 streams.append(stream)
                 stream.setDataHandler(data)
@@ -298,8 +348,18 @@ def build_dashboard() -> pn.Column:
                 chart = figure(title="Broadband levels", height=300, sizing_mode="stretch_width",
                                x_axis_label="Samples", y_axis_label="Level [dB SPL]", y_range=(0, 120))
                 for name in selected:
-                    chart.line("x", name, source=source, color=COLORS[name[1]], line_width=2, legend_label=name)
+                    chart.line("x", name, source=source, color=COLORS[name[1]], line_width=2, legend_label=name, name=name)
+                chart.add_tools(HoverTool(
+                    tooltips=[
+                        ("Measurement", "$name"),
+                        ("Sample", "@x{0}"),
+                        ("Level", "@$name{0.00} dB"),
+                    ],
+                    mode="vline",
+                ))
                 chart.legend.click_policy = "hide"
+                chart.toolbar.active_inspect = None
+                prioritize_hover(chart)
                 plots.append(pn.pane.Bokeh(chart))
 
                 def update_bb(data=data, source=source) -> None:
@@ -318,7 +378,7 @@ def build_dashboard() -> pn.Column:
                 stream = WebXiStreamHandler(
                     address, sequenceNames=[cpb_name], mode="cpb",
                     streamName=f"Dashboard-CPB-{uuid4().hex}",
-                    **saving_options("CPB"),
+                    **saving_options("CPB"), time=save_timestamps.value,
                 )
                 streams.append(stream)
                 stream.setDataHandler(data_cpb)
@@ -332,6 +392,15 @@ def build_dashboard() -> pn.Column:
                                x_axis_type="log", y_range=(0, 120))
                 chart.vbar(x="frequency", top="level", bottom=0, width="width",
                            source=source_cpb, color=COLORS[band])
+                chart.add_tools(HoverTool(
+                    tooltips=[
+                        ("Frequency", "@frequency{0.0} Hz"),
+                        ("Level", "@level{0.00} dB"),
+                    ],
+                    mode="vline",
+                ))
+                chart.toolbar.active_inspect = None
+                prioritize_hover(chart)
                 plots.append(pn.pane.Bokeh(chart))
 
                 def update_cpb(data=data_cpb, source=source_cpb, bands=bands, widths=widths) -> None:
@@ -340,15 +409,9 @@ def build_dashboard() -> pn.Column:
                         source.data = {"frequency": bands, "level": levels, "width": widths}
 
                 updates.append(update_cpb)
-            mp3_wav = None
-            flac_wav = None
-            if save_flac.value:
-                flac_wav = "wav"
-            if save_mp3.value:
-                mp3_wav = "wav"
-            for enabled, mode, sequence_id, sample_rate, saving in (
-                (flac.value, "flac", SequenceIdEnums.FLACSignal.value, SAMPLE_RATE, flac_wav),
-                (mp3.value, "mp3", SequenceIdEnums.MP3Signal.value, MP3_SAMPLE_RATE, mp3_wav),
+            for enabled, mode, sequence_id, sample_rate in (
+                (flac.value, "flac", SequenceIdEnums.FLACSignal.value, SAMPLE_RATE),
+                (mp3.value, "mp3", SequenceIdEnums.MP3Signal.value, MP3_SAMPLE_RATE),
             ):
                 if not enabled:
                     continue
@@ -356,11 +419,7 @@ def build_dashboard() -> pn.Column:
                 stream = WebXiStreamHandler(
                     address, mode=mode, sequenceID=sequence_id,
                     streamName=f"Dashboard-{mode.upper()}-{uuid4().hex}",
-                    save_format=saving,
-                    save_path=(
-                        str(destination / f"{filename}_{mode.upper()}")
-                        if saving and destination is not None else None
-                    ),
+                    **saving_options(mode.upper()),
                 )
                 streams.append(stream)
                 stream.setDataHandler(data_audio)
@@ -368,19 +427,66 @@ def build_dashboard() -> pn.Column:
                 fft_worker.start()
                 workers.append(fft_worker)
                 time_axis = np.arange(WAVEFORM_POINTS) * SAMPLE_COUNT / (sample_rate * WAVEFORM_POINTS)
-                waveform_source = ColumnDataSource(data={"time": time_axis, "amplitude": np.zeros(WAVEFORM_POINTS)})
-                spectrum_source = ColumnDataSource(data={"frequency": [0.0], "level": [0.0]})
-                waveform = figure(title=f"{mode.upper()} waveform", height=300, sizing_mode="stretch_width",
-                                  x_axis_label="Time [s]", y_axis_label="Pressure [Pa]")
-                waveform.line("time", "amplitude", source=waveform_source, line_width=1)
-                spectrum = figure(title=f"{mode.upper()} spectrum", height=300, sizing_mode="stretch_width",
-                                  x_axis_label="Frequency [Hz]", y_axis_label="dB SPL re 20 uPa",
-                                  x_range=(0, min(FREQUENCY_LIMIT, sample_rate / 2)))
-                spectrum.line("frequency", "level", source=spectrum_source, line_width=2)
+                waveform_source = ColumnDataSource(data={
+                    "time": time_axis,
+                    "amplitude": np.zeros(WAVEFORM_POINTS),
+                })
+                spectrum_source = ColumnDataSource(data={
+                    "frequency": [0.0],
+                    "level": [0.0],
+                })
+                waveform = figure(
+                    title=f"{mode.upper()} waveform",
+                    height=300,
+                    sizing_mode="stretch_width",
+                    x_axis_label="Time [s]",
+                    y_axis_label="Pressure [Pa]",
+                    x_range=(0, SAMPLE_COUNT / sample_rate),
+                    y_range=(-1, 1),
+                )
+                waveform.line(
+                    "time", "amplitude",
+                    source=waveform_source,
+                    line_width=1,
+                )
+
+                spectrum = figure(
+                    title=f"{mode.upper()} spectrum",
+                    height=300,
+                    sizing_mode="stretch_width",
+                    x_axis_label="Frequency [Hz]",
+                    y_axis_label="dB SPL re 20 uPa",
+                    x_range=(0, min(FREQUENCY_LIMIT, sample_rate / 2)),
+                    y_range=(0, 120),
+                )
+                spectrum.line(
+                    "frequency", "level",
+                    source=spectrum_source,
+                    line_width=2,
+                )
+                waveform.add_tools(HoverTool(
+                    tooltips=[
+                        ("Time", "@time{0.000} s"),
+                        ("Pressure", "@amplitude{0.00000} Pa"),
+                    ],
+                    mode="vline",
+                ))
+
+                spectrum.add_tools(HoverTool(
+                    tooltips=[
+                        ("Frequency", "@frequency{0.0} Hz"),
+                        ("Level", "@level{0.00} dB"),
+                    ],
+                    mode="vline",
+                ))
+                waveform.toolbar.active_inspect = None
+                spectrum.toolbar.active_inspect = None
+                for plot in (waveform, spectrum):
+                    prioritize_hover(plot)
                 plots.extend([pn.pane.Bokeh(waveform), pn.pane.Bokeh(spectrum)])
 
                 def update_audio(data=data_audio, fft=fft_worker, time_axis=time_axis,
-                                 waveform_source=waveform_source, spectrum_source=spectrum_source) -> None:
+                    waveform_source=waveform_source, spectrum_source=spectrum_source) -> None:
                     waveform_source.data = {"time": time_axis, "amplitude": data.snapshot()[WAVEFORM_INDICES]}
                     frequency, levels = fft.snapshot()
                     spectrum_source.data = {"frequency": frequency, "level": levels}
@@ -408,12 +514,69 @@ def build_dashboard() -> pn.Column:
     start.on_click(start_streams)
     stop.on_click(stop_streams)
     pn.state.add_periodic_callback(refresh, period=50)
+
+    broadband_controls = pn.Column(
+        "### Broadband",
+        choose_bb_frequencies,
+        enable_bb_frequencies,
+        bb_values,
+        sizing_mode="stretch_width",
+    )
+
+    cpb_controls = pn.Column(
+        "### CPB",
+        cpb_value,
+        sizing_mode="stretch_width",
+    )
+
+    audio_controls = pn.Column(
+        "### Audio",
+        flac,
+        save_flac,
+        mp3,
+        save_mp3,
+        sizing_mode="stretch_width",
+    )
+
+    recording_controls = pn.Column(
+        "### Recording",
+        save_streams,
+        save_format,
+        file_name,
+        save_timestamps,
+        pn.Accordion(
+            ("Destination folder", folder_picker),
+            active=[],
+        ),
+        sizing_mode="stretch_width",
+    )
+    controls = pn.Column(
+        host,
+        pause_measurement,        
+        pn.layout.Divider(),
+        broadband_controls,
+        cpb_controls,
+        audio_controls,
+        pn.layout.Divider(),
+        recording_controls,
+        pn.Row(start, stop),
+        status,
+        sizing_mode="stretch_width",
+        styles={"flex": "1 1 400px", "min-width": "0"},
+    )
+
+    plots.styles = {"flex": "2 1 640px", "min-width": "0"}
+
     return pn.Column(
-        pn.pane.Markdown("# Sound level dashboard"),
-        pn.FlexBox(host, bb_values, cpb_value, flac, mp3, flex_wrap="wrap"),
-        pn.FlexBox(save_streams, save_format, file_name, save_flac, save_mp3,flex_wrap="wrap"),
-        pn.Accordion(("Destination folder", folder_picker), active=[]),
-        pn.Row(start, stop), status, plots, sizing_mode="stretch_width",
+        "# Sound level dashboard",
+        pn.FlexBox(
+            controls,
+            plots,
+            flex_wrap="wrap",
+            align_items="flex-start",
+            sizing_mode="stretch_width",
+        ),
+        sizing_mode="stretch_width",
     )
 
 
