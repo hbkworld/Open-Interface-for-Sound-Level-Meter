@@ -26,7 +26,7 @@ from slm_api.helpers.stream_handlers import WebXiStreamHandler
 from slm_api.helpers.webxi_helper_functions import set_host
 from slm_api.helpers.https_requests import get, put
 
-pn.extension()
+pn.extension("gridstack")
 
 
 
@@ -40,6 +40,7 @@ FREQUENCY_LIMIT = 20_000
 WAVEFORM_INDICES = np.linspace(0, SAMPLE_COUNT - 1, WAVEFORM_POINTS, dtype=np.intp)
 FFT_WINDOW = np.hamming(FFT_SIZE)
 COLORS = {"A": "#167d8d", "C": "#d26b40", "B": "#2600ff", "Z": "#7957a0"}
+GRAPH_PANEL_HEIGHT = 400
 
 
 def prioritize_hover(plot):
@@ -197,6 +198,16 @@ def get_cpb_values(host):
 
         return cpb_values
 
+class SafeGridStack(pn.layout.GridStack):
+    @pn.depends("state", watch=True)
+    def _update_objects(self):
+        current_ids = {str(id(obj)) for obj in self}
+        incoming_ids = {item["id"] for item in self.state}
+
+        if incoming_ids != current_ids:
+            return
+
+        super()._update_objects()
 
 def build_dashboard() -> pn.Column:
     
@@ -215,7 +226,16 @@ def build_dashboard() -> pn.Column:
     start = pn.widgets.Button(name="Start selected", button_type="primary")
     stop = pn.widgets.Button(name="Stop all", button_type="light")
     status = pn.pane.Alert("Streams stopped.", alert_type="light")
-    plots = pn.Column(sizing_mode="stretch_width")
+    # plots = pn.Column(sizing_mode="stretch_width")
+    plots = SafeGridStack(
+    ncols=12,
+    height=GRAPH_PANEL_HEIGHT,
+    sizing_mode="stretch_width",
+    allow_drag=False,
+    allow_resize=False,
+)
+    rearrange = pn.widgets.Switch(name="Rearrange graphs", value=False)
+    rearrange.link(plots, value="allow_drag")
     streams: list[WebXiStreamHandler] = []
     workers: list[SpectrumWorker] = []
     updates: list[Callable[[], None]] = []
@@ -229,6 +249,18 @@ def build_dashboard() -> pn.Column:
         name="Destination folder", directory=str(Path(__file__).resolve().parents[1]),
         only_files=False,
     )
+
+    def add_plot(chart):
+        row = len(plots.objects)
+        plots.height = (row + 1) * GRAPH_PANEL_HEIGHT
+        plots[row:row + 1, 0:12] = pn.Column(
+            pn.pane.Markdown(
+                f"**{chart.title.text}**",
+                styles={"cursor": "grab"},
+            ),
+            pn.pane.Bokeh(chart),
+            sizing_mode="stretch_width",
+        )
 
     def update_save_button(event: object) -> None:
         button = event.obj
@@ -283,7 +315,9 @@ def build_dashboard() -> pn.Column:
             worker.stop()
         workers.clear()
         updates.clear()
-        plots.clear()
+        # plots.clear()
+        plots.objects = {}
+        plots.height = GRAPH_PANEL_HEIGHT
         set_status("Streams stopped.")
 
     def start_streams(_event: object) -> None:
@@ -360,7 +394,8 @@ def build_dashboard() -> pn.Column:
                 chart.legend.click_policy = "hide"
                 chart.toolbar.active_inspect = None
                 prioritize_hover(chart)
-                plots.append(pn.pane.Bokeh(chart))
+                # plots.append(pn.pane.Bokeh(chart))
+                add_plot(chart)
 
                 def update_bb(data=data, source=source) -> None:
                     source.data = {"x": list(range(HISTORY)), **data.snapshot()}
@@ -369,10 +404,15 @@ def build_dashboard() -> pn.Column:
 
             if cpb_name != "Off":
                 band = cpb_name[4]
-                webxi_helper.turn_off_CPB_freq_weight(address)
-                webxi_helper.turn_on_CPB_freq_weight(
-                    address, band #+ ("2nd" if cpb_name.endswith("2nd") else "")
-                )
+                if cpb_name.endswith("2nd"):
+                    webxi_helper.turn_on_CPB_freq_weight(
+                        address, band + ("2nd" if cpb_name.endswith("2nd") else "")
+                    )
+                else:
+                    webxi_helper.turn_off_CPB_freq_weight(address)
+                    webxi_helper.turn_on_CPB_freq_weight(
+                        address, band + ("2nd" if cpb_name.endswith("2nd") else "")
+                    )
                 webxi_helper.turn_on_cpb_leq(address, cpb_name)
                 data_cpb = CPBData()
                 stream = WebXiStreamHandler(
@@ -401,7 +441,8 @@ def build_dashboard() -> pn.Column:
                 ))
                 chart.toolbar.active_inspect = None
                 prioritize_hover(chart)
-                plots.append(pn.pane.Bokeh(chart))
+                # plots.append(pn.pane.Bokeh(chart))
+                add_plot(chart)
 
                 def update_cpb(data=data_cpb, source=source_cpb, bands=bands, widths=widths) -> None:
                     levels = data.snapshot()
@@ -483,7 +524,9 @@ def build_dashboard() -> pn.Column:
                 spectrum.toolbar.active_inspect = None
                 for plot in (waveform, spectrum):
                     prioritize_hover(plot)
-                plots.extend([pn.pane.Bokeh(waveform), pn.pane.Bokeh(spectrum)])
+                # plots.extend([pn.pane.Bokeh(waveform), pn.pane.Bokeh(spectrum)])
+                add_plot(waveform)
+                add_plot(spectrum)
 
                 def update_audio(data=data_audio, fft=fft_worker, time_axis=time_axis,
                     waveform_source=waveform_source, spectrum_source=spectrum_source) -> None:
@@ -553,6 +596,7 @@ def build_dashboard() -> pn.Column:
     controls = pn.Column(
         host,
         pause_measurement,        
+        pn.Row(rearrange),
         pn.layout.Divider(),
         broadband_controls,
         cpb_controls,
