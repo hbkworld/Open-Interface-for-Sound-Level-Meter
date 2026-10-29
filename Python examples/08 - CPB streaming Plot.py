@@ -64,8 +64,8 @@ if __name__ == "__main__":
     # turns off all CPB freq weights
     webxi_helper.turn_off_CPB_freq_weight(host)
 
-    # turns on the CPB freq weight we want to use, in this case A weight
-    webxi_helper.turn_on_CPB_freq_weight(host, ["A"])
+    # turns on the CPB freq weight we want to use, in this case B weight
+    webxi_helper.turn_on_CPB_freq_weight(host, "A")
 
     # turns on the CPB eq we want to use
     webxi_helper.turn_on_cpb_leq(host, sequence_names)

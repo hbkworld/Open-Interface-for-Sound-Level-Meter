@@ -31,6 +31,16 @@ Then to run the examples use the command
 uv run '.\01 - Getting device information.py'
 ```
 
+To open the combined BB, CPB, FLAC, and MP3 dashboard, run:
+
+```
+uv run panel serve gui/dashboard.py --show
+```
+
+Select BB measurements and a CPB measurement (including a 2nd-band variant if supported by the device), then press Start selected. Stop all stops every stream on the device.
+
+To save data, choose the active streams under Save streams, expand Destination folder, and select one folder on the PC running Panel. Set the filename prefix and choose JSON or CSV for BB/CPB. FLAC and MP3 save decoded audio as WAV, not as the original compressed audio files. Filenames follow `name-of-file_HHMM_MMDDYYYY_BB.json`, with the appropriate BB, CPB, FLAC, or MP3 suffix. Audio filenames also include the full-scale pressure added by the package. Repeated names receive a numeric suffix rather than overwriting existing files. Press Stop all to flush and close the saved data; Ctrl+C cleanup is not configured.
+
 ### If you're using pip
 
 First create and activate a virtual environment, so the packages are not installed into your system Python:
@@ -56,6 +66,27 @@ where python is your python environment, change this if e.g. a virtual environme
 ```
 python "01 - Getting device information.py"
 ```
+## Dashboard/GUI
+
+To use the dashboard gui.
+
+Make sure youre inside your virtual environment
+
+Mac and linux 
+```
+source .venv/bin/activate
+```
+
+Windows
+```
+.venv/Scripts/activate
+```
+
+and then run the following command
+```
+panel serve .\gui\dashboard.py --show
+```
+
 
 ## Structure
 This example packages consist of multiple examples where the level of complexity increases through the examples resulting in real-time streaming of LAeq. Some of the later examples will have different functions in common. Those are placed in the HelpFunctions folder.

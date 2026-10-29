@@ -19,4 +19,6 @@ dependencies = [
     "packaging",
     "prettyprint>=0.1.5",
     "slm-open-api-package==0.2.18",
+    "panel>=1.10.0",
+    "bokeh>=3.10.1",
 ]
