@@ -220,7 +220,7 @@ def build_dashboard() -> pn.Column:
     enable_bb_frequencies = pn.widgets.Button(name="Enable selected BB frequencies", button_type="primary")
     pause_measurement = pn.widgets.Button(name="Start/Pause measurement", button_type="primary" )
     bb_values = pn.widgets.MultiChoice(name="Broadband measurements", options=BB_SEQUENCES)
-    cpb_value = pn.widgets.Select(name="CPB measurement", options=["Off", *CPB_SEQUENCES], value="Off")
+    cpb_value = pn.widgets.MultiChoice(name="CPB measurements", options=CPB_SEQUENCES, value=[])
     flac = pn.widgets.Checkbox(name="FLAC waveform and spectrum", value=False)
     mp3 = pn.widgets.Checkbox(name="MP3 waveform and spectrum", value=False)
     start = pn.widgets.Button(name="Start selected", button_type="primary")
@@ -323,15 +323,20 @@ def build_dashboard() -> pn.Column:
     def start_streams(_event: object) -> None:
         address = host.value.strip()
         selected = list(bb_values.value)
-        cpb_name = cpb_value.value
+        cpb_names = list(cpb_value.value)
         if not address:
             set_status("Enter an SLM host.", "warning")
             return
-        if not (selected or cpb_name != "Off" or flac.value or mp3.value):
+        if not (selected or cpb_names or flac.value or mp3.value):
             set_status("Select at least one stream.", "warning")
             return
+        cpb_primary = {name[4] for name in cpb_names if not name.endswith("2nd")}
+        cpb_secondary = {name[4] for name in cpb_names if name.endswith("2nd")}
+        if len(cpb_primary) > 1 or len(cpb_secondary) > 1:
+            set_status("Select only one frequency weighting per CPB slot; use the second slot for another weighting.", "warning")
+            return
         active_types = {label for label, enabled in (
-            ("BB", bool(selected)), ("CPB", cpb_name != "Off"),
+            ("BB", bool(selected)), ("CPB", bool(cpb_names)),
             ("FLAC", flac.value), ("MP3", mp3.value),
         ) if enabled}
         saved_types = set(save_streams.value) & active_types
@@ -354,7 +359,8 @@ def build_dashboard() -> pn.Column:
         filename = f'{file_name.value.strip()}_{datetime.datetime.now().strftime("%H%M_%m%d%Y")}'
 
         def saving_options(stream_type: str) -> dict[str, str]:
-            if stream_type not in saved_types or destination is None:
+            save_type = "CPB" if stream_type.startswith("CPBL") else stream_type
+            if save_type not in saved_types or destination is None:
                 return {}
             extension = "wav" if stream_type in {"FLAC", "MP3"} else save_format.value
             stem = f"{filename}_{stream_type}"
@@ -402,23 +408,36 @@ def build_dashboard() -> pn.Column:
 
                 updates.append(update_bb)
 
-            if cpb_name != "Off":
+            if cpb_names:
+                setup = get(address, "/WebXi?recursive").json()["Applications"]["SLM"]["Setup"]
+                current_primary = {letter for letter in COLORS if setup.get(f"CPBFreqWeight{letter}", False)}
+                current_secondary = {letter for letter in COLORS if setup.get(f"CPBFreqWeight{letter}2nd", False)}
+                desired_primary = cpb_primary or current_primary
+                desired_secondary = cpb_secondary or current_secondary
+                if cpb_secondary and not desired_primary:
+                    raise ValueError("Select a primary CPB measurement before using the second slot.")
+                primary_changed = desired_primary != current_primary
+                secondary_changed = desired_secondary != current_secondary
+                if primary_changed or secondary_changed:
+                    for letter in current_secondary:
+                        put(address, f"/webxi/Applications/SLM/Setup/CPBFreqWeight{letter}2nd", json=False)
+                if primary_changed:
+                    for letter in current_primary:
+                        put(address, f"/webxi/Applications/SLM/Setup/CPBFreqWeight{letter}", json=False)
+                    for letter in desired_primary:
+                        webxi_helper.turn_on_CPB_freq_weight(address, letter)
+                if primary_changed or secondary_changed:
+                    for letter in desired_secondary:
+                        webxi_helper.turn_on_CPB_freq_weight(address, f"{letter}2nd")
+
+            for cpb_name in cpb_names:
                 band = cpb_name[4]
-                if cpb_name.endswith("2nd"):
-                    webxi_helper.turn_on_CPB_freq_weight(
-                        address, band + ("2nd" if cpb_name.endswith("2nd") else "")
-                    )
-                else:
-                    webxi_helper.turn_off_CPB_freq_weight(address)
-                    webxi_helper.turn_on_CPB_freq_weight(
-                        address, band + ("2nd" if cpb_name.endswith("2nd") else "")
-                    )
                 webxi_helper.turn_on_cpb_leq(address, cpb_name)
                 data_cpb = CPBData()
                 stream = WebXiStreamHandler(
                     address, sequenceNames=[cpb_name], mode="cpb",
                     streamName=f"Dashboard-CPB-{uuid4().hex}",
-                    **saving_options("CPB"), time=save_timestamps.value,
+                    **saving_options(cpb_name), time=save_timestamps.value,
                 )
                 streams.append(stream)
                 stream.setDataHandler(data_cpb)
