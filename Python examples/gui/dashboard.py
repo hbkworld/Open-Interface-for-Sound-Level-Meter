@@ -292,10 +292,7 @@ def build_dashboard() -> pn.Column:
             webxi_helper.turn_off_bb_freq_weight(address)
             webxi_helper.turn_on_bb_freq_weight(address, selected)
 
-            allowed = [
-                name for name in BB_SEQUENCES
-                if name.startswith(tuple(f"L{weight}" for weight in selected))
-            ]
+            allowed = get_bb_values(address)
             bb_values.value = [
                 name for name in bb_values.value if name in allowed
             ]
@@ -390,10 +387,13 @@ def build_dashboard() -> pn.Column:
                 for name in selected:
                     chart.line("x", name, source=source, color=COLORS[name[1]], line_width=2, legend_label=name, name=name)
                 chart.add_tools(HoverTool(
+                    renderers=[chart.renderers[0]],
                     tooltips=[
-                        ("Measurement", "$name"),
                         ("Sample", "@x{0}"),
-                        ("Level", "@$name{0.00} dB"),
+                        *[
+                            (name, f"@{{{name}}}{{0.00}} dB")
+                            for name in selected
+                        ],
                     ],
                     mode="vline",
                 ))
